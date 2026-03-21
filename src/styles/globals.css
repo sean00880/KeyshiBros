@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-kb-bg: #050508;
+  --color-kb-fg: #e8eaed;
+  --color-kb-primary: #d4d4d8;
+  --color-kb-secondary: #a1a1aa;
+  --color-kb-tertiary: #71717a;
+  --color-kb-success: #a1a1aa;
+  --color-kb-danger: #ef4444;
+  --color-kb-gold: #d4d4d8;
+  --color-kb-card: #0d0d10;
+  --color-kb-surface: #0a0a0e;
+  --color-kb-border: #1c1c22;
+  --color-kb-muted: #71717a;
+
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-body: "Space Grotesk", sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: #050508;
+    --foreground: #e8eaed;
+  }
+
+  body {
+    background-color: var(--color-kb-bg);
+    color: var(--color-kb-fg);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background-color: rgba(13, 13, 18, 0.6);
+    backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Shimmer text — metallic silver gradient */
+  .holographic-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(135deg, #ffffff 0%, #a1a1aa 40%, #ffffff 60%, #71717a 100%);
+    background-size: 200% 100%;
+    animation: shimmer 8s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+
+  .neon-glow-secondary {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.06);
+  }
+
+  .bg-cyber-grid {
+    background-size: 60px 60px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+}

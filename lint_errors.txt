@@ -1,0 +1,8 @@
+ WARN  Issue while reading "C:\Users\Sean Dwivedi\Documents\GitHub\GROWSZ\.npmrc". Failed to replace env in config: ${NPM_TOKEN}
+ WARN  Issue while reading "C:\Users\Sean Dwivedi\Documents\GitHub\GROWSZ\.npmrc". Failed to replace env in config: ${NPM_TOKEN}
+
+> @growsz/keyshi-bros@0.1.0 lint C:\Users\Sean Dwivedi\Documents\GitHub\GROWSZ\ecosystems\KeyshiBros
+> next lint
+
+Invalid project directory provided, no such directory: C:\Users\Sean Dwivedi\Documents\GitHub\GROWSZ\ecosystems\KeyshiBros\lint
+ ELIFECYCLE  Command failed with exit code 1.
