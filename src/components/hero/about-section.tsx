@@ -90,7 +90,7 @@ export function AboutSection() {
             style={{ boxShadow: 'inset 3px 3px 8px rgba(0,0,0,0.4), inset -3px -3px 8px rgba(255,255,255,0.04), 8px 8px 24px rgba(0,0,0,0.5)' }}
           >
             <iframe
-              src="https://www.youtube.com/embed/8xr0YKy6ifI?autoplay=1&mute=1&loop=1&playlist=8xr0YKy6ifI&controls=1&modestbranding=1&rel=0&playsinline=1"
+              src="https://www.youtube.com/embed/Ne_GQaNACmc?autoplay=1&mute=1&loop=1&playlist=Ne_GQaNACmc&controls=1&modestbranding=1&rel=0&playsinline=1"
               title="Keyshi Bros Gameplay"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
