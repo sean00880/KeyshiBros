@@ -101,10 +101,10 @@ export function AboutSection() {
 
           {/* Headline */}
           <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-white mb-4 leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-            Born to fight. Built to earn.
+            Two rivals. One mission.
           </h2>
           <p className="text-white/80 text-base md:text-lg max-w-xl leading-relaxed mb-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
-            Download the game. Start earning today.
+            Download Keyshi Bros free on iOS &amp; Android. Adventure through FOMOland now.
           </p>
 
           {/* Store buttons with stylized divider */}
@@ -167,9 +167,9 @@ export function AboutSection() {
             className="flex flex-wrap justify-center gap-10 mt-12"
           >
             {[
-              { value: '12,500+', label: 'Players' },
-              { value: '$2.4M+', label: 'Raised' },
-              { value: '450K', label: 'Matches' },
+              { value: '1K+', label: 'Downloads' },
+              { value: '4.5', label: 'Rating' },
+              { value: 'Free', label: 'To Play' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">{stat.value}</div>

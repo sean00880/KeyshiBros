@@ -21,8 +21,8 @@ export function PresaleModule() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
 
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-4">Secure Your Arsenal</h2>
-          <p className="text-white/70 max-w-lg mx-auto">Join the ecosystem early. Current tier ends soon.</p>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-4">Get $KB Token</h2>
+          <p className="text-white/70 max-w-lg mx-auto">Join early. Hold $KB and earn from game revenue distributions.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

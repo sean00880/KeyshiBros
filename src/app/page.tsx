@@ -1,6 +1,7 @@
 import { HeroSection } from '@/components/hero/hero-section';
 import { AboutSection } from '@/components/hero/about-section';
 import { EcosystemOrbit } from '@/components/hero/ecosystem-orbit';
+import { HowItWorks } from '@/components/hero/how-it-works';
 import { RoadmapTimeline } from '@/components/hero/roadmap-timeline';
 import { PresaleModule } from '@/components/presale/presale-module';
 import { RewardsDashboard } from '@/components/dashboard/rewards-dashboard';
@@ -18,6 +19,9 @@ export default function Page() {
 
       {/* White: Ecosystem (scroll-locked) */}
       <EcosystemOrbit />
+
+      {/* White: How It Works (revenue model) */}
+      <HowItWorks />
 
       {/* White→Black diagonal: into Roadmap */}
       <RoadmapTimeline />

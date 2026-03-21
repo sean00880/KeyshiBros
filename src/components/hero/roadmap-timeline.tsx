@@ -6,12 +6,12 @@ import { Check, RocketLaunch, Storefront, Megaphone, Users, Globe } from '@phosp
 import { DiagonalTransition } from '../ui/diagonal-transition';
 
 const milestones = [
-  { id: 1, title: 'Project Inception', desc: 'Core game architecture, smart contracts, initial character designs and pixel art engine.', status: 'complete' as const, date: 'Q3 2025', icon: Check },
-  { id: 2, title: 'Token Presale', desc: 'Public round opening, marketing blast, early access beta. Staking contracts deployed.', status: 'active' as const, date: 'Q1 2026', icon: RocketLaunch },
-  { id: 3, title: 'NFT Marketplace', desc: 'Launch of in-game assets, character skins, weapons, and a player-to-player trading marketplace.', status: 'upcoming' as const, date: 'Q2 2026', icon: Storefront },
-  { id: 4, title: 'Global Marketing', desc: 'Major influencer partnerships, e-sports sponsorships, and cross-chain expansion.', status: 'upcoming' as const, date: 'Q3 2026', icon: Megaphone },
-  { id: 5, title: '100K Players', desc: 'Scaling infrastructure, mobile app optimization, referral program, regional launches.', status: 'upcoming' as const, date: 'Q4 2026', icon: Users },
-  { id: 6, title: '1M Players', desc: 'VR integration, social hubs, creator economy, DAO governance, and full metaverse launch.', status: 'upcoming' as const, date: '2027', icon: Globe },
+  { id: 1, title: 'Game Launch', desc: 'Keyshi Bros released on iOS App Store and Google Play. Shibo & Momo adventure through FOMOland.', status: 'complete' as const, date: 'Q3 2025', icon: Check },
+  { id: 2, title: '$KB Token Launch', desc: 'Keyshi Bros ETH token presale and DEX listing. Revenue-sharing smart contracts deployed.', status: 'active' as const, date: 'Q1 2026', icon: RocketLaunch },
+  { id: 3, title: 'Epoch Distributions', desc: 'First epoch-based revenue distributions to $KB holders. Transparent on-chain accounting.', status: 'upcoming' as const, date: 'Q2 2026', icon: Storefront },
+  { id: 4, title: 'Game Expansion', desc: 'New FOMOland worlds, boss battles, power-ups, and seasonal content updates.', status: 'upcoming' as const, date: 'Q3 2026', icon: Megaphone },
+  { id: 5, title: '100K Downloads', desc: 'Marketing push, influencer partnerships, community growth, and app store optimization.', status: 'upcoming' as const, date: 'Q4 2026', icon: Users },
+  { id: 6, title: 'Ecosystem Growth', desc: 'Additional game titles, expanded token utility, merchandise, and community governance.', status: 'upcoming' as const, date: '2027', icon: Globe },
 ];
 
 export function RoadmapTimeline() {

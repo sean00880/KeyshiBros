@@ -50,17 +50,17 @@ export function HeroSection() {
                 <span className="text-white ml-1 font-light">BROS</span>
               </span>
             </div>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-white/80 font-mono font-bold border border-white/20 bg-white/10 rounded-full px-3 py-0.5">V2 LIVE</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-white/80 font-mono font-bold border border-white/20 bg-white/10 rounded-full px-3 py-0.5">OUT NOW</span>
           </motion.div>
 
           <motion.h1 variants={item} className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter leading-[1.05] mb-3">
-            <span className="block text-white">Play.</span>
-            <span className="block text-white">Earn.</span>
-            <span className="block holographic-text">Dominate.</span>
+            <span className="block text-white">Adventure</span>
+            <span className="block text-white">Awaits in</span>
+            <span className="block holographic-text">FOMOland.</span>
           </motion.h1>
 
           <motion.p variants={item} className="text-white/70 text-sm md:text-base max-w-[440px] mb-6 leading-relaxed">
-            Enter the premier cyber-combat arena. Stake tokens, crush opponents, and claim daily airdrops.
+            Shibo & Momo team up to battle Pepe&apos;s minions, collect Meme Coins, and recover the stolen Golden Poop from Blocktopia.
           </motion.p>
 
           {/* Social icons row — Telegram, iOS, Google Play, Twitter */}
