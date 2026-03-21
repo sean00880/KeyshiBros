@@ -53,8 +53,9 @@ export function ScrollGif({
 
         if (cancelled || decompressed.length === 0) return;
 
-        const w = decompressed[0].dims.width;
-        const h = decompressed[0].dims.height;
+        const first = decompressed[0]!;
+        const w = first.dims.width;
+        const h = first.dims.height;
         setDimensions({ width: w, height: h });
 
         // Build full-frame ImageData array (handle GIF dispose methods)
@@ -98,7 +99,8 @@ export function ScrollGif({
           // Render first frame
           if (canvasRef.current && extractedFrames.length > 0) {
             const ctx = canvasRef.current.getContext("2d");
-            if (ctx) ctx.putImageData(extractedFrames[0], 0, 0);
+            const f0 = extractedFrames[0];
+            if (ctx && f0) ctx.putImageData(f0, 0, 0);
           }
         }
       } catch (err) {

@@ -77,8 +77,9 @@ async function loadGifFrames(url: string): Promise<{ frames: ImageData[]; width:
   const decoded = decompressFrames(gif, true);
   if (decoded.length === 0) return { frames: [], width: 0, height: 0 };
 
-  const w = decoded[0].dims.width;
-  const h = decoded[0].dims.height;
+  const first = decoded[0]!;
+  const w = first.dims.width;
+  const h = first.dims.height;
   const tmp = document.createElement("canvas");
   tmp.width = w;
   tmp.height = h;
@@ -114,7 +115,7 @@ export function EcosystemOrbit() {
   const [shibaDims, setShibaDims] = useState({ width: 200, height: 200 });
   const shibaCurrentRef = useRef(0);
 
-  const activeSlide = SLIDES[activeIndex];
+  const activeSlide = SLIDES[activeIndex] ?? SLIDES[0]!;
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -142,13 +143,15 @@ export function EcosystemOrbit() {
   const renderMomo = useCallback((idx: number) => {
     if (!momoCanvasRef.current || momoFrames.length === 0 || idx === momoCurrentRef.current) return;
     momoCurrentRef.current = idx;
-    momoCanvasRef.current.getContext("2d")?.putImageData(momoFrames[idx], 0, 0);
+    const frame = momoFrames[idx];
+    if (frame) momoCanvasRef.current.getContext("2d")?.putImageData(frame, 0, 0);
   }, [momoFrames]);
 
   const renderShiba = useCallback((idx: number) => {
     if (!shibaCanvasRef.current || shibaFrames.length === 0 || idx === shibaCurrentRef.current) return;
     shibaCurrentRef.current = idx;
-    shibaCanvasRef.current.getContext("2d")?.putImageData(shibaFrames[idx], 0, 0);
+    const frame = shibaFrames[idx];
+    if (frame) shibaCanvasRef.current.getContext("2d")?.putImageData(frame, 0, 0);
   }, [shibaFrames]);
 
   // Scroll drives EVERYTHING: GIF frames + active slide
