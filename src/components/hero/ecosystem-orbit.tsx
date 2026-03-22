@@ -34,14 +34,14 @@ const SLIDES = [
     id: 'tokenomics',
     label: 'Tokenomics',
     icon: Coin,
-    headline: '1M Supply Token',
-    desc: '1,000,000 $KB total supply on Ethereum. 500K allocated to private sale at 2,000 KB/ETH. Adjustable tax (0-25%) with renounce function for ownership.',
+    headline: '1B Supply Token',
+    desc: '1,000,000,000 $KB total supply on Solana. Zero tax. Private investors receive 1% of supply (10M tokens) for $9,000 USD.',
     stats: [
-      { label: 'Supply', value: '1M' },
-      { label: 'Tax', value: '0-25%' },
-      { label: 'Chain', value: 'ETH' },
+      { label: 'Supply', value: '1B' },
+      { label: 'Tax', value: '0%' },
+      { label: 'Chain', value: 'SOL' },
     ],
-    badge: 'Renounceable',
+    badge: 'Zero Tax',
   },
   {
     id: 'community',
@@ -189,9 +189,9 @@ export function EcosystemOrbit() {
             {/* Tax badge */}
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 border border-gray-200">
               <ShieldCheck size={14} weight="fill" className="text-gray-600" />
-              <span className="text-[10px] font-bold text-gray-700 tracking-wide">1M SUPPLY</span>
+              <span className="text-[10px] font-bold text-gray-700 tracking-wide">1B SUPPLY</span>
               <span className="text-gray-300">|</span>
-              <span className="text-[10px] font-bold text-gray-700 tracking-wide">0-25% TAX</span>
+              <span className="text-[10px] font-bold text-gray-700 tracking-wide">0% TAX</span>
             </div>
           </div>
 
