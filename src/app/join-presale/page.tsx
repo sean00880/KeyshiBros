@@ -59,23 +59,37 @@ function JoinPresalePage() {
 
   // SOL price from Jupiter oracle
   const [solPrice, setSolPrice] = useState<SolPrice | null>(null);
-  const [priceLoading, setPriceLoading] = useState(false);
+  const [priceLoading, setPriceLoading] = useState(true);
+  const [priceError, setPriceError] = useState(false);
 
   const fetchPrice = useCallback(async () => {
     setPriceLoading(true);
+    setPriceError(false);
     try {
       const res = await fetch('/api/sol-price');
-      if (res.ok) setSolPrice(await res.json());
-    } catch { /* silent */ } finally {
+      if (res.ok) {
+        setSolPrice(await res.json());
+      } else {
+        setPriceError(true);
+      }
+    } catch {
+      setPriceError(true);
+    } finally {
       setPriceLoading(false);
     }
   }, []);
 
+  // Fetch on mount + every 30s
   useEffect(() => {
     fetchPrice();
     const interval = setInterval(fetchPrice, 30_000);
     return () => clearInterval(interval);
   }, [fetchPrice]);
+
+  // Also fetch when switching to Solana tab
+  useEffect(() => {
+    if (method === 'solana' && !solPrice && !priceLoading) fetchPrice();
+  }, [method, solPrice, priceLoading, fetchPrice]);
 
   // Check Supabase auth on mount
   useEffect(() => {
@@ -117,7 +131,13 @@ function JoinPresalePage() {
     }
   }
 
-  const formValid = name.trim() && email.trim() && (method === 'card' || (method === 'solana' && isConnected && solPrice));
+  const formValid = name.trim() && email.trim() && (method === 'card' || (method === 'solana' && isConnected));
+
+  // Reason the button is disabled (for user feedback)
+  const disabledReason = !name.trim() ? 'Enter your name' :
+    !email.trim() ? 'Enter your email' :
+    method === 'solana' && !isConnected ? 'Connect your wallet first' :
+    null;
 
   async function handleStripeCheckout() {
     setLoading(true);
@@ -139,7 +159,14 @@ function JoinPresalePage() {
   }
 
   async function handleSolanaPayment() {
-    if (!walletProvider || !walletAddress || !solPrice) return;
+    if (!walletProvider || !walletAddress) return;
+    // Fetch fresh price if not available
+    let price = solPrice;
+    if (!price) {
+      await fetchPrice();
+      price = solPrice;
+      if (!price) { setError('Could not fetch SOL price. Please try again.'); return; }
+    }
     setLoading(true);
     setError('');
     setTxStage('signing');
@@ -151,7 +178,7 @@ function JoinPresalePage() {
       );
       const senderPubkey = new PublicKey(walletAddress);
       const PRESALE_WALLET = new PublicKey(process.env.NEXT_PUBLIC_PRESALE_SOL_WALLET!);
-      const lamports = Math.floor(solPrice.solAmount * LAMPORTS_PER_SOL);
+      const lamports = Math.floor(price.solAmount * LAMPORTS_PER_SOL);
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({ fromPubkey: senderPubkey, toPubkey: PRESALE_WALLET, lamports })
@@ -331,16 +358,30 @@ function JoinPresalePage() {
                 <div className="text-4xl font-bold text-white tracking-tighter">$4,500</div>
                 <div className="text-white/40 text-sm mt-1">5,000,000 $KB Tokens</div>
                 <AnimatePresence mode="wait">
-                  {method === 'solana' && solPrice && (
+                  {method === 'solana' && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3">
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10">
-                        <span className="text-white font-mono font-bold text-sm">{solPrice.solAmount} SOL</span>
-                        <span className="text-white/30 text-[10px]">@ ${solPrice.solPrice}/SOL</span>
-                        <button onClick={fetchPrice} disabled={priceLoading} className="text-white/30 hover:text-white/60 transition-colors" title="Refresh price">
-                          <ArrowsClockwise size={12} className={priceLoading ? 'animate-spin' : ''} />
-                        </button>
-                      </div>
-                      <div className="text-white/20 text-[9px] font-mono mt-1">Live via Jupiter Oracle · 30s refresh</div>
+                      {priceLoading && !solPrice ? (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10">
+                          <ArrowsClockwise size={12} className="text-white/30 animate-spin" />
+                          <span className="text-white/30 text-[10px] font-mono">Fetching SOL price...</span>
+                        </div>
+                      ) : priceError && !solPrice ? (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-400/5 border border-red-400/20">
+                          <span className="text-red-400/60 text-[10px] font-mono">Price unavailable</span>
+                          <button onClick={fetchPrice} className="text-red-400/40 hover:text-red-400/70 transition-colors text-[10px] underline">Retry</button>
+                        </div>
+                      ) : solPrice ? (
+                        <>
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10">
+                            <span className="text-white font-mono font-bold text-sm">{solPrice.solAmount} SOL</span>
+                            <span className="text-white/30 text-[10px]">@ ${solPrice.solPrice}/SOL</span>
+                            <button onClick={fetchPrice} disabled={priceLoading} className="text-white/30 hover:text-white/60 transition-colors" title="Refresh price">
+                              <ArrowsClockwise size={12} className={priceLoading ? 'animate-spin' : ''} />
+                            </button>
+                          </div>
+                          <div className="text-white/20 text-[9px] font-mono mt-1">Live via Jupiter Oracle · 30s refresh</div>
+                        </>
+                      ) : null}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -449,6 +490,11 @@ function JoinPresalePage() {
                       <><Wallet size={16} weight="fill" /> Pay {solPrice ? `${solPrice.solAmount} SOL` : 'with Solana'}</>
                     )}
                   </button>
+
+                  {/* Disabled reason */}
+                  {disabledReason && !loading && (
+                    <div className="text-white/30 text-[10px] text-center font-mono">{disabledReason}</div>
+                  )}
 
                   {/* Trust signals */}
                   <div className="flex flex-wrap justify-center gap-4 pt-2">
