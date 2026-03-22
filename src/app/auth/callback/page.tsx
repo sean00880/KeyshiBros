@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -8,30 +8,40 @@ import { createClient } from '@/lib/supabase/client';
 function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const code = searchParams.get('code');
   const next = searchParams.get('next') || '/';
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!code) {
+      setError('No authorization code received.');
+      return;
+    }
+
     const supabase = createClient();
 
-    // The browser client automatically detects the OAuth code in the URL
-    // and exchanges it for a session using the PKCE verifier it stored earlier.
-    // We just need to wait for the auth state to change, then redirect.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        router.replace(next);
+    supabase.auth.exchangeCodeForSession(code).then(({ error: sessionError }) => {
+      if (sessionError) {
+        console.error('[KB OAuth] Exchange failed:', sessionError.message);
+        setError(sessionError.message);
+        return;
       }
+      router.replace(next);
     });
+  }, [code, next, router]);
 
-    // Also handle the case where the session is already established
-    // (e.g., if onAuthStateChange fires before our listener is set up)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace(next);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [next, router]);
+  if (error) {
+    return (
+      <div className="min-h-svh bg-kb-bg flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-red-400 text-sm mb-4">{error}</p>
+          <button onClick={() => router.replace('/join-presale')} className="text-white/50 text-sm underline">
+            Back to presale
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-svh bg-kb-bg flex items-center justify-center">
