@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -19,15 +19,31 @@ import {
   CaretRight,
   AppleLogo,
   GooglePlayLogo,
+  ArrowsClockwise,
+  CircleNotch,
 } from '@phosphor-icons/react';
 import { useSearchParams } from 'next/navigation';
+import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 type PaymentMethod = 'card' | 'solana';
+type TxState = 'idle' | 'connecting' | 'signing' | 'confirming' | 'success' | 'error';
+
+interface SolPrice {
+  solPrice: number;
+  solAmount: number;
+  presaleUsd: number;
+  timestamp: number;
+}
 
 export default function JoinPresaleWrapper() {
   return (
     <Suspense fallback={<div className="min-h-svh bg-kb-bg" />}>
-      <JoinPresalePage />
+      <SolanaWalletProvider>
+        <JoinPresalePage />
+      </SolanaWalletProvider>
     </Suspense>
   );
 }
@@ -35,20 +51,56 @@ export default function JoinPresaleWrapper() {
 function JoinPresalePage() {
   const searchParams = useSearchParams();
   const status = searchParams.get('status');
+  const txParam = searchParams.get('tx');
 
   const [method, setMethod] = useState<PaymentMethod>('card');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [telegram, setTelegram] = useState('');
-  const [solWallet, setSolWallet] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [txState, setTxState] = useState<TxState>('idle');
+  const [txSignature, setTxSignature] = useState('');
+
+  // Real-time SOL price from Jupiter
+  const [solPrice, setSolPrice] = useState<SolPrice | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+
+  // Wallet adapter
+  const { publicKey, connected, sendTransaction, connecting } = useWallet();
+  const { setVisible } = useWalletModal();
+  const { connection } = useConnection();
+
+  const fetchPrice = useCallback(async () => {
+    setPriceLoading(true);
+    try {
+      const res = await fetch('/api/sol-price');
+      if (res.ok) {
+        const data = await res.json();
+        setSolPrice(data);
+      }
+    } catch {
+      // Silently fail — show fallback
+    } finally {
+      setPriceLoading(false);
+    }
+  }, []);
+
+  // Fetch price on mount and every 30s
+  useEffect(() => {
+    fetchPrice();
+    const interval = setInterval(fetchPrice, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchPrice]);
+
+  // Auto-populate wallet address when connected
+  const walletAddress = publicKey?.toBase58() || '';
 
   const formValid = useMemo(() => {
     if (!name.trim() || !email.trim()) return false;
-    if (method === 'solana' && !solWallet.trim()) return false;
+    if (method === 'solana' && !connected) return false;
     return true;
-  }, [name, email, method, solWallet]);
+  }, [name, email, method, connected]);
 
   async function handleStripeCheckout() {
     setLoading(true);
@@ -73,54 +125,53 @@ function JoinPresalePage() {
   }
 
   async function handleSolanaPayment() {
+    if (!publicKey || !solPrice) return;
     setLoading(true);
     setError('');
+    setTxState('signing');
+
     try {
-      // Dynamic import to avoid SSR issues
-      const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = await import('@solana/web3.js');
-
-      const provider = (window as any).solana;
-      if (!provider?.isPhantom && !provider) {
-        setError('Please install Phantom or a Solana wallet extension.');
-        setLoading(false);
-        return;
-      }
-
-      await provider.connect();
-      const senderPubkey = provider.publicKey;
-
-      const connection = new Connection(
-        process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
-        'confirmed'
-      );
-
       const PRESALE_WALLET = new PublicKey(
         process.env.NEXT_PUBLIC_PRESALE_SOL_WALLET || '11111111111111111111111111111111'
       );
-      const solAmount = parseFloat(process.env.NEXT_PUBLIC_PRESALE_SOL_AMOUNT || '60');
-      const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);
+      const lamports = Math.floor(solPrice.solAmount * LAMPORTS_PER_SOL);
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
-          fromPubkey: senderPubkey,
+          fromPubkey: publicKey,
           toPubkey: PRESALE_WALLET,
           lamports,
         })
       );
 
-      const { blockhash } = await connection.getLatestBlockhash();
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       transaction.recentBlockhash = blockhash;
-      transaction.feePayer = senderPubkey;
+      transaction.feePayer = publicKey;
 
-      const signed = await provider.signAndSendTransaction(transaction);
+      // Send via wallet adapter (supports all wallets)
+      const signature = await sendTransaction(transaction, connection);
+      setTxSignature(signature);
+      setTxState('confirming');
 
-      // Success — redirect with tx signature
-      window.location.href = `/join-presale?status=success&tx=${signed.signature}`;
+      // Poll for confirmation
+      const confirmation = await connection.confirmTransaction(
+        { signature, blockhash, lastValidBlockHeight },
+        'confirmed'
+      );
+
+      if (confirmation.value.err) {
+        setTxState('error');
+        setError('Transaction failed on-chain. Please try again.');
+      } else {
+        setTxState('success');
+        window.location.href = `/join-presale?status=success&tx=${signature}`;
+      }
     } catch (err: any) {
-      if (err?.code === 4001) {
+      setTxState('error');
+      if (err?.name === 'WalletSignTransactionError' || err?.code === 4001) {
         setError('Transaction rejected by wallet.');
       } else {
-        setError(err?.message || 'Solana transaction failed. Please try again.');
+        setError(err?.message || 'Transaction failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -133,7 +184,7 @@ function JoinPresalePage() {
     else handleSolanaPayment();
   }
 
-  // Success / Cancelled states
+  // Success state
   if (status === 'success') {
     return (
       <div className="min-h-svh bg-kb-bg flex items-center justify-center px-4">
@@ -144,10 +195,20 @@ function JoinPresalePage() {
         >
           <CheckCircle weight="fill" className="text-green-400 mx-auto mb-6" size={80} />
           <h1 className="text-3xl font-bold text-white mb-4">Payment Received</h1>
-          <p className="text-white/60 mb-8 leading-relaxed">
-            Thank you for joining the Keyshi Bros private sale. Your allocation of 10,000,000 $KB tokens (1% of supply) has been reserved.
+          <p className="text-white/60 mb-4 leading-relaxed">
+            Your allocation of 10,000,000 $KB tokens (1% of supply) has been reserved.
             We&apos;ll be in touch via email with next steps.
           </p>
+          {txParam && (
+            <a
+              href={`https://solscan.io/tx/${txParam}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/40 hover:text-white/70 text-xs font-mono underline underline-offset-4 block mb-8"
+            >
+              View on Solscan
+            </a>
+          )}
           <Link
             href="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-white hover:bg-white/5 transition-colors"
@@ -184,13 +245,11 @@ function JoinPresalePage() {
 
   return (
     <div className="min-h-svh bg-kb-bg relative">
-      {/* Background */}
       <div className="absolute inset-0 bg-cyber-grid opacity-5 pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-white/[0.02] blur-[120px]" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 md:px-8 py-12 md:py-20">
 
-        {/* Back link */}
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors mb-12 text-sm"
@@ -227,7 +286,6 @@ function JoinPresalePage() {
             transition={{ delay: 0.1 }}
             className="lg:col-span-3 flex flex-col gap-8"
           >
-            {/* Investment Summary */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
               <div className="grid grid-cols-2 gap-6 mb-8">
                 {[
@@ -306,7 +364,6 @@ function JoinPresalePage() {
               </div>
             </div>
 
-            {/* Key Benefits */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
               <h3 className="text-white font-bold mb-4 flex items-center gap-2">
                 <ShieldCheck weight="fill" size={20} />
@@ -327,7 +384,6 @@ function JoinPresalePage() {
               </ul>
             </div>
 
-            {/* Disclaimer */}
             <p className="text-white/20 text-[10px] font-mono leading-relaxed">
               This is not financial advice. Token allocations are subject to smart contract deployment on Solana mainnet.
               By proceeding with payment, you acknowledge this is a private investment in an early-stage GameFi project.
@@ -344,9 +400,42 @@ function JoinPresalePage() {
           >
             <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8 flex flex-col gap-6">
 
+              {/* Price display */}
               <div className="text-center">
                 <div className="text-4xl font-bold text-white tracking-tighter">$9,000</div>
                 <div className="text-white/40 text-sm mt-1">10,000,000 $KB Tokens</div>
+
+                {/* Live SOL equivalent */}
+                <AnimatePresence mode="wait">
+                  {method === 'solana' && solPrice && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3"
+                    >
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10">
+                        <span className="text-white font-mono font-bold text-sm">
+                          {solPrice.solAmount} SOL
+                        </span>
+                        <span className="text-white/30 text-[10px]">
+                          @ ${solPrice.solPrice}/SOL
+                        </span>
+                        <button
+                          onClick={fetchPrice}
+                          disabled={priceLoading}
+                          className="text-white/30 hover:text-white/60 transition-colors"
+                          title="Refresh price"
+                        >
+                          <ArrowsClockwise size={12} className={priceLoading ? 'animate-spin' : ''} />
+                        </button>
+                      </div>
+                      <div className="text-white/20 text-[9px] font-mono mt-1">
+                        Live price via Jupiter · Updates every 30s
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="h-px bg-white/10" />
@@ -410,26 +499,63 @@ function JoinPresalePage() {
                   />
                 </div>
 
+                {/* Wallet connection for Solana */}
                 <AnimatePresence>
                   {method === 'solana' && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-col gap-3"
                     >
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono mb-1.5 block">Your Solana Wallet *</label>
-                      <input
-                        type="text"
-                        value={solWallet}
-                        onChange={(e) => setSolWallet(e.target.value)}
-                        placeholder="Your SOL address for token delivery"
-                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors text-sm font-mono text-xs"
-                      />
-                      <p className="text-white/20 text-[10px] mt-1.5">This is where your $KB tokens will be sent after TGE.</p>
+                      {connected ? (
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                          <CheckCircle weight="fill" className="text-green-400 flex-shrink-0" size={16} />
+                          <div className="min-w-0">
+                            <div className="text-green-400 text-xs font-bold">Wallet Connected</div>
+                            <div className="text-white/40 text-[10px] font-mono truncate">{walletAddress}</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setVisible(true)}
+                          disabled={connecting}
+                          className="w-full py-3 rounded-xl border border-white/20 text-white/70 hover:text-white hover:border-white/40 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                        >
+                          {connecting ? (
+                            <CircleNotch size={16} className="animate-spin" />
+                          ) : (
+                            <Wallet size={16} />
+                          )}
+                          {connecting ? 'Connecting...' : 'Connect Wallet'}
+                        </button>
+                      )}
+                      <p className="text-white/20 text-[10px]">
+                        Supports Phantom, Solflare, and other Solana wallets. Your $KB tokens will be sent to this wallet after TGE.
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Tx state indicator */}
+              <AnimatePresence>
+                {txState !== 'idle' && txState !== 'error' && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.05] border border-white/10"
+                  >
+                    <CircleNotch size={16} className="text-white/60 animate-spin flex-shrink-0" />
+                    <span className="text-white/60 text-xs">
+                      {txState === 'signing' && 'Approve transaction in your wallet...'}
+                      {txState === 'confirming' && 'Confirming on Solana...'}
+                      {txState === 'success' && 'Confirmed!'}
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Error */}
               {error && (
@@ -454,7 +580,7 @@ function JoinPresalePage() {
                 ) : (
                   <>
                     <Wallet size={16} weight="fill" />
-                    Pay with Solana
+                    Pay {solPrice ? `${solPrice.solAmount} SOL` : 'with Solana'}
                   </>
                 )}
               </button>
