@@ -34,14 +34,14 @@ const SLIDES = [
     id: 'tokenomics',
     label: 'Tokenomics',
     icon: Coin,
-    headline: 'Revenue-Backed Token',
-    desc: 'A portion of Keyshi Bros game revenue is locked and distributed to $KB token holders in epochs based on net supply retained.',
+    headline: '1M Supply Token',
+    desc: '1,000,000 $KB total supply on Ethereum. 500K allocated to private sale at 2,000 KB/ETH. Adjustable tax (0-25%) with renounce function for ownership.',
     stats: [
+      { label: 'Supply', value: '1M' },
+      { label: 'Tax', value: '0-25%' },
       { label: 'Chain', value: 'ETH' },
-      { label: 'Tax', value: '4% / 4%' },
-      { label: 'Model', value: 'Epoch' },
     ],
-    badge: '4% Buy | 4% Sell',
+    badge: 'Renounceable',
   },
   {
     id: 'community',
@@ -189,9 +189,9 @@ export function EcosystemOrbit() {
             {/* Tax badge */}
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 border border-gray-200">
               <ShieldCheck size={14} weight="fill" className="text-gray-600" />
-              <span className="text-[10px] font-bold text-gray-700 tracking-wide">4% BUY</span>
+              <span className="text-[10px] font-bold text-gray-700 tracking-wide">1M SUPPLY</span>
               <span className="text-gray-300">|</span>
-              <span className="text-[10px] font-bold text-gray-700 tracking-wide">4% SELL</span>
+              <span className="text-[10px] font-bold text-gray-700 tracking-wide">0-25% TAX</span>
             </div>
           </div>
 
@@ -221,8 +221,8 @@ export function EcosystemOrbit() {
               {SLIDES.map((node, i) => {
                 const rad = (i * (360 / SLIDES.length) * Math.PI) / 180;
                 const radius = 125;
-                const x = Math.cos(rad) * radius;
-                const y = Math.sin(rad) * radius;
+                const x = Math.round(Math.cos(rad) * radius * 100) / 100;
+                const y = Math.round(Math.sin(rad) * radius * 100) / 100;
                 const isActive = i === activeIndex;
 
                 return (

@@ -8,13 +8,10 @@ export function PresaleModule() {
   const { paymentMode, setPaymentMode, amount, setAmount, tokenAmount, tokenPrice, setPreset } = usePresale();
 
   const tiers = [
-    { name: 'Seed', percent: 100, price: '$0.02', filled: true },
-    { name: 'Private', percent: 100, price: '$0.03', filled: true },
-    { name: 'Public 1', percent: 85, price: '$0.045', filled: false, current: true },
-    { name: 'Public 2', percent: 0, price: '$0.06', filled: false },
+    { name: 'Private Sale', percent: 45, price: '2,000 KB/ETH', filled: false, current: true },
   ];
 
-  const presets = ['100', '500', '1000', '2500', '5000', 'MAX'];
+  const presets = ['1', '2', '3', '4', '5'];
 
   return (
     <section id="presale" className="py-32 bg-kb-bg relative">
@@ -62,8 +59,8 @@ export function PresaleModule() {
 
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-gray-600 text-sm uppercase tracking-widest font-mono">Stage Goal</span>
-                  <span className="text-xl font-bold text-gray-900">$2.5M / $3.0M</span>
+                  <span className="text-gray-600 text-sm uppercase tracking-widest font-mono">Soft Cap / Hard Cap</span>
+                  <span className="text-xl font-bold text-gray-900">125 ETH / 500 ETH</span>
                 </div>
               </div>
             </div>
@@ -116,17 +113,20 @@ export function PresaleModule() {
 
             {/* Amount Input */}
             <div className="mb-6">
-              <label className="text-sm font-bold text-gray-600 mb-2 block">Payment Amount (USD)</label>
+              <label className="text-sm font-bold text-gray-600 mb-2 block">Payment Amount (ETH)</label>
               <div className="relative">
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
+                  min={1}
+                  max={5}
+                  step="0.1"
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-6 py-5 text-3xl font-mono text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all font-bold"
                 />
                 <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                  <span className="text-gray-600 font-bold tracking-widest text-sm">USD</span>
+                  <span className="text-gray-600 font-bold tracking-widest text-sm">ETH</span>
                 </div>
               </div>
             </div>
@@ -136,10 +136,10 @@ export function PresaleModule() {
               {presets.map((p, i) => (
                 <button
                   key={i}
-                  onClick={() => setPreset(p === 'MAX' ? '10000' : p)}
+                  onClick={() => setPreset(p)}
                   className="py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 text-sm font-mono font-medium hover:border-cyan-300 hover:text-gray-900 transition-all active:scale-95"
                 >
-                  {p !== 'MAX' ? '$' : ''}{p}
+                  {p} ETH
                 </button>
               ))}
             </div>
@@ -148,7 +148,7 @@ export function PresaleModule() {
             <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200 mb-8">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-600 text-sm">You receive approximately</span>
-                <span className="text-gray-600 text-sm font-mono">{tokenPrice} USD/KB</span>
+                <span className="text-gray-600 text-sm font-mono">2,000 KB/ETH</span>
               </div>
               <div className="flex items-end gap-3">
                 <span className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tighter">
