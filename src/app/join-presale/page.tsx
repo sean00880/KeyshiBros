@@ -79,17 +79,8 @@ function JoinPresalePage() {
     }
   }, []);
 
-  // Fetch on mount + every 30s
-  useEffect(() => {
-    fetchPrice();
-    const interval = setInterval(fetchPrice, 30_000);
-    return () => clearInterval(interval);
-  }, [fetchPrice]);
-
-  // Also fetch when switching to Solana tab
-  useEffect(() => {
-    if (method === 'solana' && !solPrice && !priceLoading) fetchPrice();
-  }, [method, solPrice, priceLoading, fetchPrice]);
+  // Fetch once on mount (server caches for 1 hour via revalidate)
+  useEffect(() => { fetchPrice(); }, [fetchPrice]);
 
   // Check Supabase auth on mount
   useEffect(() => {
@@ -379,7 +370,7 @@ function JoinPresalePage() {
                               <ArrowsClockwise size={12} className={priceLoading ? 'animate-spin' : ''} />
                             </button>
                           </div>
-                          <div className="text-white/20 text-[9px] font-mono mt-1">Live via Jupiter Oracle · 30s refresh</div>
+                          <div className="text-white/20 text-[9px] font-mono mt-1">Live via CoinGecko · Cached 1hr</div>
                         </>
                       ) : null}
                     </motion.div>
