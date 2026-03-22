@@ -196,7 +196,7 @@ function JoinPresalePage() {
           <CheckCircle weight="fill" className="text-green-400 mx-auto mb-6" size={80} />
           <h1 className="text-3xl font-bold text-white mb-4">Payment Received</h1>
           <p className="text-white/60 mb-4 leading-relaxed">
-            Your allocation of 10,000,000 $KB tokens (1% of supply) has been reserved.
+            Your allocation of 5,000,000 $KB tokens (0.5% of supply) has been reserved.
             We&apos;ll be in touch via email with next steps.
           </p>
           {txParam && (
@@ -272,8 +272,8 @@ function JoinPresalePage() {
             Exclusive Early Ownership
           </h1>
           <p className="text-white/50 max-w-2xl mx-auto text-lg leading-relaxed">
-            You are invited to secure <span className="text-white font-semibold">1% of the total Keyshibros token supply</span> —
-            10,000,000 tokens out of 1,000,000,000 — at a special early-entry valuation.
+            You are invited to secure <span className="text-white font-semibold">0.5% of the total Keyshibros token supply</span> —
+            5,000,000 tokens out of 500,000,000 — at a special early-entry valuation.
           </p>
         </motion.div>
 
@@ -289,9 +289,9 @@ function JoinPresalePage() {
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
               <div className="grid grid-cols-2 gap-6 mb-8">
                 {[
-                  { label: 'Total Supply', value: '1,000,000,000', sub: '$KB Tokens' },
-                  { label: 'Your Allocation', value: '10,000,000', sub: '1% of Supply' },
-                  { label: 'Investment', value: '$9,000', sub: 'USD or SOL equivalent' },
+                  { label: 'Total Supply', value: '500,000,000', sub: '$KB Tokens' },
+                  { label: 'Your Allocation', value: '5,000,000', sub: '0.5% of Supply' },
+                  { label: 'Investment', value: '$4,500', sub: 'USD or SOL equivalent' },
                   { label: 'Tax', value: '0%', sub: 'Zero Tax Forever' },
                 ].map((item, i) => (
                   <div key={i}>
@@ -371,7 +371,7 @@ function JoinPresalePage() {
               </h3>
               <ul className="flex flex-col gap-3">
                 {[
-                  'Significant allocation (1% of supply) at pre-launch pricing',
+                  'Significant allocation (0.5% of supply) at pre-launch pricing',
                   'Priority access to staking and future ecosystem perks',
                   'Alignment with real revenue from in-game purchases and marketplace fees',
                   'Positioned for growth as Version 2 attracts mainstream mobile gamers into crypto',
@@ -402,8 +402,8 @@ function JoinPresalePage() {
 
               {/* Price display */}
               <div className="text-center">
-                <div className="text-4xl font-bold text-white tracking-tighter">$9,000</div>
-                <div className="text-white/40 text-sm mt-1">10,000,000 $KB Tokens</div>
+                <div className="text-4xl font-bold text-white tracking-tighter">$4,500</div>
+                <div className="text-white/40 text-sm mt-1">5,000,000 $KB Tokens</div>
 
                 {/* Live SOL equivalent */}
                 <AnimatePresence mode="wait">
@@ -574,7 +574,7 @@ function JoinPresalePage() {
                   <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
                 ) : method === 'card' ? (
                   <>
-                    Pay $9,000 via Stripe
+                    Pay $4,500 via Stripe
                     <CaretRight weight="bold" size={16} className="group-hover:translate-x-0.5 transition-transform" />
                   </>
                 ) : (

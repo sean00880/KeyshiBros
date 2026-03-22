@@ -34,10 +34,10 @@ const SLIDES = [
     id: 'tokenomics',
     label: 'Tokenomics',
     icon: Coin,
-    headline: '1B Supply Token',
-    desc: '1,000,000,000 $KB total supply on Solana. Zero tax. Private investors receive 1% of supply (10M tokens) for $9,000 USD.',
+    headline: '500M Supply Token',
+    desc: '500,000,000 $KB total supply on Solana. Zero tax. Private investors receive 0.5% of supply (5M tokens) for $4,500 USD.',
     stats: [
-      { label: 'Supply', value: '1B' },
+      { label: 'Supply', value: '500M' },
       { label: 'Tax', value: '0%' },
       { label: 'Chain', value: 'SOL' },
     ],
@@ -189,7 +189,7 @@ export function EcosystemOrbit() {
             {/* Tax badge */}
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 border border-gray-200">
               <ShieldCheck size={14} weight="fill" className="text-gray-600" />
-              <span className="text-[10px] font-bold text-gray-700 tracking-wide">1B SUPPLY</span>
+              <span className="text-[10px] font-bold text-gray-700 tracking-wide">500M SUPPLY</span>
               <span className="text-gray-300">|</span>
               <span className="text-[10px] font-bold text-gray-700 tracking-wide">0% TAX</span>
             </div>

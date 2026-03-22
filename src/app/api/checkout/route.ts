@@ -23,11 +23,11 @@ export async function POST(request: Request) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Keyshi Bros Private Sale — 1% Token Allocation',
-              description: '10,000,000 $KB tokens (1% of 1B total supply). Private investor early-entry valuation.',
+              name: 'Keyshi Bros Private Sale — 0.5% Token Allocation',
+              description: '5,000,000 $KB tokens (0.5% of 500M total supply). Private investor early-entry valuation.',
               images: ['https://keyshibros.com/assets/images/keyshibros2.png'],
             },
-            unit_amount: 900000, // $9,000.00 in cents
+            unit_amount: 450000, // $4,500.00 in cents
           },
           quantity: 1,
         },
@@ -37,8 +37,8 @@ export async function POST(request: Request) {
       metadata: {
         investor_name: name,
         telegram_handle: telegram || '',
-        allocation: '10000000',
-        supply_percent: '1',
+        allocation: '5000000',
+        supply_percent: '0.5',
       },
       success_url: `${request.headers.get('origin')}/join-presale?status=success`,
       cancel_url: `${request.headers.get('origin')}/join-presale?status=cancelled`,

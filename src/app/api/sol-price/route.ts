@@ -11,7 +11,7 @@ export async function GET() {
       return Response.json({ error: 'Failed to fetch SOL price' }, { status: 502 });
     }
 
-    const presaleUsd = 9000;
+    const presaleUsd = 4500;
     const solAmount = Math.ceil((presaleUsd / solPrice) * 1000) / 1000; // Round up to 3 decimals
 
     return Response.json({
