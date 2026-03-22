@@ -97,9 +97,18 @@ function JoinPresalePage() {
     setAuthLoading(true);
     try {
       const supabase = createClient();
+      // Per-domain PKCE pattern (same as MEMELinked SessionManager):
+      // Build callback URL on THIS domain with ?next= for post-auth redirect
+      const currentPath = window.location.pathname + window.location.search;
+      const callbackUrl = new URL('/auth/callback', window.location.origin);
+      callbackUrl.searchParams.set('next', currentPath);
+
       await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/join-presale` },
+        options: {
+          redirectTo: callbackUrl.toString(),
+          skipBrowserRedirect: false,
+        },
       });
     } catch {
       setError('Google sign-in failed. Please try again.');
