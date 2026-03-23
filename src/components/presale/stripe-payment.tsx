@@ -25,8 +25,6 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
   const elements = useElements();
   const [status, setStatus] = useState<PaymentStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [ready, setReady] = useState(false);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements || status === 'processing') return;
@@ -102,7 +100,6 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
       {/* Stripe Payment Element */}
       <div className="rounded-xl overflow-hidden">
         <PaymentElement
-          onReady={() => setReady(true)}
           options={{
             layout: 'tabs',
             defaultValues: {
@@ -130,7 +127,7 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
       {/* Pay button with Stripe logo */}
       <button
         type="submit"
-        disabled={!stripe || !elements || !ready || status === 'processing' || status === 'success'}
+        disabled={!stripe || !elements || status === 'processing' || status === 'success'}
         className="w-full py-4 rounded-xl bg-white text-gray-900 font-bold text-sm tracking-wide hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all flex items-center justify-center gap-2.5"
       >
         {status === 'processing' ? (
