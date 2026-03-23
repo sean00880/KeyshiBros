@@ -1,16 +1,14 @@
 'use client';
 
 /**
- * AppKit Solana-Only Provider — FINAL FIX
+ * AppKit Solana-Only Provider
  *
- * Root cause of all issues:
- * 1. customWallets bypass WalletConnect pairing — deep links open but
- *    no WC session is created, so wallet can't connect back
- * 2. Solana-only API fetch returns 0 due to chain registration race
+ * Combines customWallets (for UI display) + wallet-standard adapters
+ * (for actual Phantom/Solflare connection) + WalletConnect (for Trust/OKX).
  *
- * Solution: Use includeWalletIds (API-backed, full WC pairing) +
- * enable socials as fallback. The API wallets have proper WC integration.
- * Social login (Google) also works as a Solana wallet via Reown.
+ * customWallets show in the modal. When tapped:
+ * - Phantom/Solflare: wallet-standard handles connection if in wallet browser
+ * - Trust/OKX/Backpack: WalletConnect deep link opens app
  */
 
 import { type ReactNode } from 'react';
@@ -20,18 +18,9 @@ import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
-
-// Verified Solana wallet IDs from api.web3modal.org
-const SOLANA_WALLETS = [
-  '4622a2b2d6af1c984494291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',  // Trust Wallet
-  '971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709', // OKX Wallet
-  '0b415a746fb9ee99cce155c2ceca0c6f6061b1dbca2d722b3ba16381d0562150', // SafePal
-  '8a0ee50d1f22f6651afcae7eb4253e52a3310b90af5daef78a8c4929a9bb99d4', // Binance Wallet
-];
+const IMG = (id: string) => `https://explorer-api.walletconnect.com/v3/logo/md/${id}?projectId=${projectId}`;
 
 if (typeof window !== 'undefined' && projectId) {
-  // PhantomWalletAdapter + SolflareWalletAdapter handle detection
-  // via wallet-standard (injected provider) — they don't use WalletConnect
   const solanaAdapter = new SolanaAdapter({
     wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
     registerWalletStandard: true,
@@ -48,16 +37,62 @@ if (typeof window !== 'undefined' && projectId) {
       url: window.location.origin,
       icons: [`${window.location.origin}/icon.png`],
     },
+    // Socials enabled as fallback wallet on mobile Safari
     features: {
       analytics: false,
-      // Keep socials enabled — they work as Solana wallet via Reown
-      // and provide a connection method on mobile Safari where
-      // wallet-standard detection doesn't work
     },
-    // API-backed wallets with full WalletConnect pairing
-    includeWalletIds: SOLANA_WALLETS,
-    featuredWalletIds: SOLANA_WALLETS,
     allWallets: 'SHOW',
+    customWallets: [
+      {
+        id: 'phantom',
+        name: 'Phantom',
+        homepage: 'https://phantom.app',
+        image_url: IMG('b6ec7b81-bb4f-427d-e290-7631e6e50d00'),
+        mobile_link: 'https://phantom.app/ul/v1/',
+        webapp_link: 'https://phantom.app/ul/v1/',
+        app_store: 'https://apps.apple.com/app/phantom-crypto-wallet/id1598432977',
+        play_store: 'https://play.google.com/store/apps/details?id=app.phantom',
+      },
+      {
+        id: 'solflare',
+        name: 'Solflare',
+        homepage: 'https://solflare.com',
+        image_url: IMG('34c0e38d-66c4-470e-1aed-a6fabe2d1e00'),
+        mobile_link: 'https://solflare.com/ul/v1/',
+        webapp_link: 'https://solflare.com/ul/v1/',
+        app_store: 'https://apps.apple.com/app/solflare-solana-wallet/id1580902717',
+        play_store: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
+      },
+      {
+        id: 'trust',
+        name: 'Trust Wallet',
+        homepage: 'https://trustwallet.com',
+        image_url: IMG('7677b54f-3486-46e2-4e37-bf8747814f00'),
+        mobile_link: 'trust://',
+        webapp_link: 'https://link.trustwallet.com',
+        app_store: 'https://apps.apple.com/app/trust-wallet/id1288339409',
+        play_store: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
+      },
+      {
+        id: 'backpack',
+        name: 'Backpack',
+        homepage: 'https://backpack.app',
+        image_url: IMG('71ca9daf-a31e-4d2a-fd01-f5dc2dc66900'),
+        mobile_link: 'backpack://',
+        app_store: 'https://apps.apple.com/app/backpack-crypto-wallet/id6444544093',
+        play_store: 'https://play.google.com/store/apps/details?id=app.backpack.mobile',
+      },
+      {
+        id: 'okx',
+        name: 'OKX Wallet',
+        homepage: 'https://www.okx.com/web3',
+        image_url: IMG('45f2f08e-fc0c-4d62-3e63-404e72170500'),
+        mobile_link: 'okex://main',
+        webapp_link: 'https://www.okx.com/download?deeplink=okx://web3/wallet/walletConnect',
+        app_store: 'https://apps.apple.com/app/okx-buy-bitcoin-eth-crypto/id1327268470',
+        play_store: 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp',
+      },
+    ],
   });
 }
 
