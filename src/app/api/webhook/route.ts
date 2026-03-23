@@ -94,5 +94,51 @@ export async function POST(request: Request) {
     }
   }
 
+  // Handle embedded PaymentIntent confirmation (no Checkout Session)
+  if (event.type === 'payment_intent.succeeded') {
+    const pi = event.data.object as Stripe.PaymentIntent;
+    const supabase = createAdminClient();
+
+    if (pi.metadata?.project === 'keyshi-bros') {
+      // Update any pending record with this payment intent
+      const { data: existing } = await supabase
+        .from('presale_investors')
+        .select('id')
+        .eq('stripe_payment_intent_id', pi.id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from('presale_investors')
+          .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+          .eq('id', existing.id);
+        console.log('[Webhook] PaymentIntent confirmed:', pi.id);
+      } else {
+        // Record from embedded checkout (investor already recorded client-side, just confirm)
+        const { data: pending } = await supabase
+          .from('presale_investors')
+          .select('id')
+          .eq('email', pi.metadata?.investor_name ? undefined : '')
+          .eq('payment_method', 'stripe')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (pending) {
+          await supabase
+            .from('presale_investors')
+            .update({
+              stripe_payment_intent_id: pi.id,
+              status: 'confirmed',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', pending.id);
+        }
+        console.log('[Webhook] PaymentIntent recorded:', pi.id);
+      }
+    }
+  }
+
   return Response.json({ received: true });
 }

@@ -15,6 +15,7 @@ import type { Provider } from '@reown/appkit-adapter-solana';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection } from '@solana/web3.js';
 import { CompleteProfile } from '@/components/presale/complete-profile';
 import { TxTracker, type TxStage } from '@/components/presale/tx-tracker';
+import { StripePayment } from '@/components/presale/stripe-payment';
 import { createClient } from '@/lib/supabase/client';
 
 type PaymentMethod = 'card' | 'solana';
@@ -553,24 +554,44 @@ function JoinPresalePage() {
                     <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">{error}</div>
                   )}
 
-                  {/* Submit */}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!formValid || loading}
-                    className="group w-full py-4 rounded-xl bg-white text-gray-900 font-bold text-sm tracking-wide hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
-                    ) : method === 'card' ? (
-                      <>Pay $4,500 via Stripe <CaretRight weight="bold" size={16} className="group-hover:translate-x-0.5 transition-transform" /></>
-                    ) : (
-                      <><Wallet size={16} weight="fill" /> Pay {solPrice ? `${solPrice.solAmount} SOL` : 'with Solana'}</>
-                    )}
-                  </button>
+                  {/* Card: Embedded Stripe Payment */}
+                  {method === 'card' && displayName && displayEmail && cardWallet.trim() && (
+                    <StripePayment
+                      name={displayName}
+                      email={displayEmail}
+                      telegram={telegram}
+                      walletAddress={cardWallet}
+                      userId={user?.id}
+                      onSuccess={() => {
+                        window.location.href = '/join-presale?status=success';
+                      }}
+                      onError={(msg) => setError(msg)}
+                    />
+                  )}
 
-                  {/* Disabled reason */}
-                  {disabledReason && !loading && (
-                    <div className="text-white/30 text-[10px] text-center font-mono">{disabledReason}</div>
+                  {/* Card: disabled reason if wallet not entered */}
+                  {method === 'card' && !cardWallet.trim() && (
+                    <div className="text-white/30 text-[10px] text-center font-mono">Enter your Solana wallet above to proceed</div>
+                  )}
+
+                  {/* Solana: Pay button */}
+                  {method === 'solana' && (
+                    <>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!formValid || loading}
+                        className="group w-full py-4 rounded-xl bg-white text-gray-900 font-bold text-sm tracking-wide hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      >
+                        {loading ? (
+                          <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
+                        ) : (
+                          <><Wallet size={16} weight="fill" /> Pay {solPrice ? `${solPrice.solAmount} SOL` : 'with Solana'}</>
+                        )}
+                      </button>
+                      {disabledReason && !loading && (
+                        <div className="text-white/30 text-[10px] text-center font-mono">{disabledReason}</div>
+                      )}
+                    </>
                   )}
 
                   {/* Trust signals */}
