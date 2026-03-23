@@ -51,7 +51,7 @@ if (typeof window !== 'undefined' && projectId) {
         homepage: 'https://phantom.app',
         image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/a797aa35-c0fa-4dfc-1a53-e7f675162e00?projectId=' + projectId,
         mobile_link: 'phantom://',
-        link_mode: 'https://phantom.app/ul/browse/',
+
         app_store: 'https://apps.apple.com/app/phantom-crypto-wallet/id1598432977',
         play_store: 'https://play.google.com/store/apps/details?id=app.phantom',
       },
@@ -61,7 +61,7 @@ if (typeof window !== 'undefined' && projectId) {
         homepage: 'https://solflare.com',
         image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/1ca0bdd4-7475-4a8d-1939-af023d120600?projectId=' + projectId,
         mobile_link: 'solflare://',
-        link_mode: 'https://solflare.com/ul/v1/browse/',
+
         app_store: 'https://apps.apple.com/app/solflare-solana-wallet/id1580902717',
         play_store: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
       },
@@ -71,7 +71,7 @@ if (typeof window !== 'undefined' && projectId) {
         homepage: 'https://trustwallet.com',
         image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/7677b54f-3486-46e2-4e37-bf8747814f00?projectId=' + projectId,
         mobile_link: 'trust://',
-        link_mode: 'https://link.trustwallet.com',
+
         app_store: 'https://apps.apple.com/app/trust-wallet/id1288339409',
         play_store: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
       },
@@ -81,7 +81,7 @@ if (typeof window !== 'undefined' && projectId) {
         homepage: 'https://www.okx.com/web3',
         image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/45f2f08e-fc0c-4d62-3e63-404e72170500?projectId=' + projectId,
         mobile_link: 'okex://main',
-        link_mode: 'https://www.okx.com/download',
+
         app_store: 'https://apps.apple.com/app/okx-buy-bitcoin-eth-crypto/id1327268470',
         play_store: 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp',
       },
@@ -91,7 +91,7 @@ if (typeof window !== 'undefined' && projectId) {
         homepage: 'https://backpack.app',
         image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/ebac7b26-e5f0-4f5a-828b-5c8b05174f00?projectId=' + projectId,
         mobile_link: 'backpack://',
-        link_mode: 'https://backpack.app/ul/browse/',
+
         app_store: 'https://apps.apple.com/app/backpack-crypto-wallet/id6444544093',
         play_store: 'https://play.google.com/store/apps/details?id=app.backpack.mobile',
       },
