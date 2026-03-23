@@ -518,17 +518,31 @@ function JoinPresalePage() {
                       )}
                     </AnimatePresence>
 
-                    {/* Solana: AppKit wallet button */}
+                    {/* Solana: Wallet connection */}
                     <AnimatePresence>
                       {method === 'solana' && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-3">
+                          {/* Primary: AppKit connect button */}
                           <appkit-button balance="hide" />
+
+                          {/* Specific wallet buttons (mobile deep-link friendly) */}
+                          {!isConnected && (
+                            <div className="flex flex-col gap-2">
+                              <div className="text-white/30 text-[9px] font-mono uppercase tracking-widest text-center">Or connect directly</div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <appkit-wallet-button wallet="phantom" namespace="solana" />
+                                <appkit-wallet-button wallet="solflare" namespace="solana" />
+                              </div>
+                            </div>
+                          )}
+
                           {isConnected && walletAddress && (
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
                               <CheckCircle weight="fill" className="text-green-400" size={14} />
                               <span className="text-green-400 text-[10px] font-mono truncate">{walletAddress}</span>
                             </div>
                           )}
+                          <p className="text-white/30 text-[10px]">Supports Phantom, Solflare, MetaMask, Backpack, and more.</p>
                         </motion.div>
                       )}
                     </AnimatePresence>

@@ -1,7 +1,7 @@
 "use client";
 
 import { createAppKit } from '@reown/appkit/react';
-import { SolanaAdapter } from '@reown/appkit-adapter-solana';
+import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
 import { solana } from '@reown/appkit/networks';
 import type { AppKit } from '@reown/appkit';
 import { type ReactNode, useEffect } from 'react';
