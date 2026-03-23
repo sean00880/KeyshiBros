@@ -20,6 +20,7 @@
     "@stripe/stripe-js": "^8.11.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.3",
+    "@walletconnect/universal-provider": "^2.23.8",
     "clsx": "^2.1.1",
     "framer-motion": "^12.0.0",
     "gifuct-js": "^2.1.2",
