@@ -43,27 +43,52 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const supabase = createAdminClient();
 
-    const { error } = await supabase
+    // Update existing pending record to confirmed, or insert new one
+    const { data: existing } = await supabase
       .from('presale_investors')
-      .upsert({
-        project_id: KB_PROJECT_ID,
-        email: session.customer_email || session.metadata?.investor_name || 'unknown',
-        full_name: session.metadata?.investor_name || 'Unknown',
-        telegram_handle: session.metadata?.telegram_handle || null,
-        payment_method: 'stripe',
-        stripe_session_id: session.id,
-        stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
-        usd_amount: (session.amount_total || 0) / 100,
-        token_allocation: parseInt(session.metadata?.allocation || '5000000'),
-        status: 'confirmed',
-      }, {
-        onConflict: 'stripe_session_id',
-      });
+      .select('id')
+      .eq('email', session.customer_email || '')
+      .eq('payment_method', 'stripe')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (error) {
-      console.error('[Webhook] DB upsert error:', error);
+    if (existing) {
+      // Update pending → confirmed
+      const { error } = await supabase
+        .from('presale_investors')
+        .update({
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+          usd_amount: (session.amount_total || 0) / 100,
+          status: 'confirmed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existing.id);
+
+      if (error) console.error('[Webhook] Update error:', error);
+      else console.log('[Webhook] Investor confirmed:', session.customer_email);
     } else {
-      console.log('[Webhook] Investor recorded:', session.customer_email);
+      // Insert new (webhook-only, no prior record)
+      const { error } = await supabase
+        .from('presale_investors')
+        .insert({
+          project_id: KB_PROJECT_ID,
+          email: session.customer_email || 'unknown',
+          full_name: session.metadata?.investor_name || 'Unknown',
+          telegram_handle: session.metadata?.telegram_handle || null,
+          wallet_address: session.metadata?.wallet_address || null,
+          payment_method: 'stripe',
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+          usd_amount: (session.amount_total || 0) / 100,
+          token_allocation: parseInt(session.metadata?.allocation || '5000000'),
+          status: 'confirmed',
+        });
+
+      if (error) console.error('[Webhook] Insert error:', error);
+      else console.log('[Webhook] New investor recorded:', session.customer_email);
     }
   }
 

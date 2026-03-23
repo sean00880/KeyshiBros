@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const stripe = getStripe();
     const body = await request.json();
-    const { name, email, telegram } = body;
+    const { name, email, telegram, wallet_address } = body;
 
     if (!email || !name) {
       return Response.json({ error: 'Name and email are required' }, { status: 400 });
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       metadata: {
         investor_name: name,
         telegram_handle: telegram || '',
+        wallet_address: wallet_address || '',
         allocation: '5000000',
         supply_percent: '0.5',
       },
