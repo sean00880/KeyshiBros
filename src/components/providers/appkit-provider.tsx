@@ -20,6 +20,9 @@ import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { ConnectionController } from '@reown/appkit-controllers';
 
+import { DefaultSIWX, SolanaVerifier } from '@reown/appkit-siwx';
+import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
+
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 const IMG = (id: string) => `https://explorer-api.walletconnect.com/v3/logo/md/${id}?projectId=${projectId}`;
 
@@ -43,17 +46,41 @@ if (typeof window !== 'undefined' && projectId) {
     });
   };
 
+  // Configure SIWX using Solana Verifier
+  // IMPORTANT: Since WagmiAdapter isn't available, we strictly omit `signer` to ensure AppKit uses its 
+  // ConnectionController defaults to fire signature requests native to the Solana Adapter (Phantom / Solflare).
+  const siwx = new DefaultSIWX({
+    verifiers: [new SolanaVerifier()],
+    storage: supabaseSIWXStorage,
+  });
+
   createAppKit({
     adapters: [solanaAdapter],
     networks: [solana, solanaTestnet, solanaDevnet],
     projectId,
     themeMode: 'dark',
+    siwx, // Applying SIWX integration tailored for Solana 
     metadata: {
       name: 'Keyshi Bros',
       description: 'GameFi Private Sale — $KB Token on Solana',
       url: window.location.origin,
       icons: [`${window.location.origin}/icon.png`],
-    },
+      // STRICT FIX FOR MOBILE WALLET DEEP LINKING
+      // Required so that apps like Phantom and Solflare can redirect back to the PWA after wallet connections/signing
+      // @ts-ignore - Reown AppKit generic metadata might not include redirect in types, but it is required for deep linking
+      redirect: (() => {
+        const origin = window.location.origin;
+        const hostname = window.location.hostname;
+        const domainName = hostname
+          .replace(/^www\./, '')
+          .replace(/\.(com|org|net|io|app|xyz|co)$/, '');
+
+        return {
+          native: `${domainName}://wc`,
+          universal: `${origin}/wc`,
+        };
+      })()
+    } as any,
     features: {
       analytics: false,
     },
