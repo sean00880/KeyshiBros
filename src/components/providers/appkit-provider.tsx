@@ -1,53 +1,37 @@
 'use client';
 
 /**
- * AppKit Provider — WagmiAdapter + SolanaAdapter
+ * AppKit Solana Provider with customWallets for mobile deep linking
  *
- * CONFIRMED ROOT CAUSE: customWallets don't create WC sessions.
- * The onConnectMobile() function checks: if (wallet.mobile_link && wcUri)
- * wcUri is only set when WC pairing is initiated — which only happens
- * for API-backed wallets, not customWallets.
+ * SolanaAdapter internally uses @walletconnect/universal-provider.
+ * The WC session IS created — "Copy link" in the modal proves it.
  *
- * Solution: WagmiAdapter creates UniversalProvider which enables WC.
- * defaultNetwork: mainnet so API wallet fetch works (Solana-only = 0 wallets).
- * User can switch to Solana in the modal's network selector.
+ * AppKit formats deep links as: {mobile_link}/wc?uri={encodedWcUri}
+ * For HTTP links: {webapp_link}/wc?uri={encodedWcUri}
  *
- * This is the SAME architecture as MEMELinked/normie-tool.
+ * On iOS Safari, tapping "Open" calls window.open() with the deep link.
+ * The wallet app opens, reads the WC URI, connects, and redirects back.
  */
 
-import { type ReactNode, useState, useEffect } from 'react';
+import { type ReactNode } from 'react';
 import { createAppKit } from '@reown/appkit/react';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { solana, mainnet, type AppKitNetwork } from '@reown/appkit/networks';
+import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type Config, WagmiProvider } from 'wagmi';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
-// mainnet MUST be first — WagmiAdapter needs EVM chain for init
-// Solana included for SolanaAdapter connections
-const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, solana];
-
-const queryClient = new QueryClient();
-let wagmiConfig: Config | null = null;
+const IMG = (id: string) => `https://explorer-api.walletconnect.com/v3/logo/md/${id}?projectId=${projectId}`;
 
 if (typeof window !== 'undefined' && projectId) {
-  const wagmiAdapter = new WagmiAdapter({ projectId, networks });
-  wagmiConfig = wagmiAdapter.wagmiConfig;
-
   const solanaAdapter = new SolanaAdapter({
     wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
     registerWalletStandard: true,
   });
 
   createAppKit({
-    adapters: [wagmiAdapter, solanaAdapter],
-    networks,
+    adapters: [solanaAdapter],
+    networks: [solana, solanaTestnet, solanaDevnet],
     projectId,
-    // defaultNetwork: mainnet so API wallet discovery works
-    // (Solana-only defaultNetwork causes 0 wallets in API response filter)
-    defaultNetwork: mainnet,
     themeMode: 'dark',
     metadata: {
       name: 'Keyshi Bros',
@@ -55,27 +39,65 @@ if (typeof window !== 'undefined' && projectId) {
       url: window.location.origin,
       icons: [`${window.location.origin}/icon.png`],
     },
-    // Match MEMELinked exactly — no feature overrides
-    // Let Reown defaults handle the modal UI
+    features: {
+      analytics: false,
+    },
     allWallets: 'SHOW',
-    featuredWalletIds: [
-      'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
-      '4622a2b2d6af1c984494291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',  // Trust Wallet
-      'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
+    customWallets: [
+      {
+        id: 'phantom',
+        name: 'Phantom',
+        homepage: 'https://phantom.app',
+        image_url: IMG('b6ec7b81-bb4f-427d-e290-7631e6e50d00'),
+        mobile_link: 'https://phantom.app/ul/v1',
+        webapp_link: 'https://phantom.app/ul/v1',
+        app_store: 'https://apps.apple.com/app/phantom-crypto-wallet/id1598432977',
+        play_store: 'https://play.google.com/store/apps/details?id=app.phantom',
+      },
+      {
+        id: 'solflare',
+        name: 'Solflare',
+        homepage: 'https://solflare.com',
+        image_url: IMG('34c0e38d-66c4-470e-1aed-a6fabe2d1e00'),
+        mobile_link: 'https://solflare.com/ul/v1',
+        webapp_link: 'https://solflare.com/ul/v1',
+        app_store: 'https://apps.apple.com/app/solflare-solana-wallet/id1580902717',
+        play_store: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
+      },
+      {
+        id: 'trust',
+        name: 'Trust Wallet',
+        homepage: 'https://trustwallet.com',
+        image_url: IMG('7677b54f-3486-46e2-4e37-bf8747814f00'),
+        mobile_link: 'trust:',
+        webapp_link: 'https://link.trustwallet.com',
+        app_store: 'https://apps.apple.com/app/trust-wallet/id1288339409',
+        play_store: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
+      },
+      {
+        id: 'backpack',
+        name: 'Backpack',
+        homepage: 'https://backpack.app',
+        image_url: IMG('71ca9daf-a31e-4d2a-fd01-f5dc2dc66900'),
+        mobile_link: 'backpack:',
+        webapp_link: 'https://backpack.app/ul',
+        app_store: 'https://apps.apple.com/app/backpack-crypto-wallet/id6444544093',
+        play_store: 'https://play.google.com/store/apps/details?id=app.backpack.mobile',
+      },
+      {
+        id: 'okx',
+        name: 'OKX Wallet',
+        homepage: 'https://www.okx.com/web3',
+        image_url: IMG('45f2f08e-fc0c-4d62-3e63-404e72170500'),
+        mobile_link: 'okex:',
+        webapp_link: 'https://www.okx.com/download',
+        app_store: 'https://apps.apple.com/app/okx-buy-bitcoin-eth-crypto/id1327268470',
+        play_store: 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp',
+      },
     ],
   });
 }
 
 export function AppKitProvider({ children }: { children: ReactNode }) {
-  // wagmiConfig is set at module scope on client, null on server
-  // Always render children — WagmiProvider only wraps on client
-  if (!wagmiConfig) return <>{children}</>;
-
-  return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    </WagmiProvider>
-  );
+  return <>{children}</>;
 }
