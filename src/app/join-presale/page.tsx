@@ -321,7 +321,7 @@ function JoinPresalePage() {
             <span className="text-xs font-bold text-white/80 uppercase tracking-[0.2em]">Private Invitation</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-white mb-4">Exclusive Early Ownership</h1>
-          <p className="text-white/50 max-w-2xl mx-auto text-lg leading-relaxed">
+          <p className="text-white/70 max-w-2xl mx-auto text-lg leading-relaxed">
             You are invited to secure <span className="text-white font-semibold">0.5% of the total Keyshibros token supply</span> —
             5,000,000 tokens out of 500,000,000 — at a special early-entry valuation.
           </p>
@@ -339,9 +339,9 @@ function JoinPresalePage() {
                   { label: 'Tax', value: '0%', sub: 'Zero Tax Forever' },
                 ].map((item, i) => (
                   <div key={i}>
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono mb-1">{item.label}</div>
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-mono mb-1">{item.label}</div>
                     <div className="text-xl md:text-2xl font-bold text-white tracking-tight">{item.value}</div>
-                    <div className="text-xs text-white/40 mt-0.5">{item.sub}</div>
+                    <div className="text-xs text-white/60 mt-0.5">{item.sub}</div>
                   </div>
                 ))}
               </div>
@@ -360,15 +360,15 @@ function JoinPresalePage() {
                   ].map((item, i) => (
                     <div key={i} className="flex gap-4">
                       <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center flex-shrink-0">
-                        <item.icon weight="duotone" className="text-white/60" size={20} />
+                        <item.icon weight="duotone" className="text-white/80" size={20} />
                       </div>
                       <div>
                         <h4 className="text-white font-bold text-sm mb-1">{item.title}</h4>
-                        <p className="text-white/40 text-sm leading-relaxed">{item.desc}</p>
+                        <p className="text-white/60 text-sm leading-relaxed">{item.desc}</p>
                         {'links' in item && item.links && (
                           <div className="flex gap-3 mt-2">
                             {item.links.map((link, j) => (
-                              <a key={j} href={link.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white/80 transition-colors">
+                              <a key={j} href={link.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors">
                                 <link.icon size={14} />{link.label}
                               </a>
                             ))}
@@ -384,13 +384,13 @@ function JoinPresalePage() {
               <h3 className="text-white font-bold mb-4 flex items-center gap-2"><ShieldCheck weight="fill" size={20} /> Key Benefits of Early Ownership</h3>
               <ul className="flex flex-col gap-3">
                 {['Significant allocation (0.5% of supply) at pre-launch pricing', 'Priority access to staking and future ecosystem perks', 'Alignment with real revenue from in-game purchases and marketplace fees', 'Positioned for growth as Version 2 attracts mainstream mobile gamers into crypto'].map((b, i) => (
-                  <li key={i} className="flex items-start gap-3 text-white/50 text-sm leading-relaxed">
-                    <CheckCircle weight="fill" className="text-white/30 flex-shrink-0 mt-0.5" size={16} />{b}
+                  <li key={i} className="flex items-start gap-3 text-white/70 text-sm leading-relaxed">
+                    <CheckCircle weight="fill" className="text-white/50 flex-shrink-0 mt-0.5" size={16} />{b}
                   </li>
                 ))}
               </ul>
             </div>
-            <p className="text-white/20 text-[10px] font-mono leading-relaxed">
+            <p className="text-white/40 text-[10px] font-mono leading-relaxed">
               This is not financial advice. Token allocations are subject to smart contract deployment on Solana mainnet.
               All sales are final. Tokens will be distributed after the Token Generation Event (TGE).
             </p>
@@ -403,7 +403,7 @@ function JoinPresalePage() {
               {/* Price header */}
               <div className="text-center">
                 <div className="text-4xl font-bold text-white tracking-tighter">$4,500</div>
-                <div className="text-white/40 text-sm mt-1">5,000,000 $KB Tokens</div>
+                <div className="text-white/60 text-sm mt-1">5,000,000 $KB Tokens</div>
                 <AnimatePresence mode="wait">
                   {method === 'solana' && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3">
@@ -426,7 +426,7 @@ function JoinPresalePage() {
                               <ArrowsClockwise size={12} className={priceLoading ? 'animate-spin' : ''} />
                             </button>
                           </div>
-                          <div className="text-white/20 text-[9px] font-mono mt-1">Live via CoinGecko · Cached 1hr</div>
+                          <div className="text-white/40 text-[9px] font-mono mt-1">Live via CoinGecko · Cached 1hr</div>
                         </>
                       ) : null}
                     </motion.div>
@@ -440,7 +440,7 @@ function JoinPresalePage() {
               {/* Gate 1: Google OAuth */}
               {!isAuthed ? (
                 <div className="flex flex-col items-center gap-4 py-4">
-                  <div className="text-white/50 text-sm text-center">Sign in to access the private sale</div>
+                  <div className="text-white/70 text-sm text-center">Sign in to access the private sale</div>
                   <button
                     onClick={handleGoogleSignIn}
                     disabled={authLoading}
@@ -453,7 +453,7 @@ function JoinPresalePage() {
                     )}
                     Continue with Google
                   </button>
-                  <div className="text-white/20 text-[10px] font-mono">Secure OAuth via GROWSZ Identity</div>
+                  <div className="text-white/40 text-[10px] font-mono">Secure OAuth via GROWSZ Identity</div>
                 </div>
 
               /* Gate 2: Profile completion */
@@ -501,19 +501,19 @@ function JoinPresalePage() {
                   {/* Form fields (only editable extras) */}
                   <div className="flex flex-col gap-4">
                     <div>
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono mb-1.5 block">Telegram Handle</label>
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-mono mb-1.5 block">Telegram Handle</label>
                       <input type="text" value={telegram} onChange={(e) => setTelegram(e.target.value)} placeholder="@yourhandle"
-                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors text-sm" />
+                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-white/30 transition-colors text-sm" />
                     </div>
 
                     {/* Card: manual wallet input for token delivery */}
                     <AnimatePresence>
                       {method === 'card' && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                          <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono mb-1.5 block">Solana Wallet for Token Delivery *</label>
+                          <label className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-mono mb-1.5 block">Solana Wallet for Token Delivery *</label>
                           <input type="text" value={cardWallet} onChange={(e) => setCardWallet(e.target.value)} placeholder="Your SOL address"
-                            className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors text-sm font-mono text-xs" />
-                          <p className="text-white/20 text-[10px] mt-1.5">$KB tokens will be sent to this address after TGE.</p>
+                            className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-white/30 transition-colors text-sm font-mono text-xs" />
+                          <p className="text-white/40 text-[10px] mt-1.5">$KB tokens will be sent to this address after TGE.</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -584,7 +584,7 @@ function JoinPresalePage() {
                         )}
                       </button>
                       {disabledReason && !loading && (
-                        <div className="text-white/30 text-[10px] text-center font-mono">{disabledReason}</div>
+                        <div className="text-white/50 text-[10px] text-center font-mono">{disabledReason}</div>
                       )}
                     </>
                   )}
@@ -592,7 +592,7 @@ function JoinPresalePage() {
                   {/* Trust signals */}
                   <div className="flex flex-wrap justify-center gap-4 pt-2">
                     {[{ icon: ShieldCheck, label: 'Secure' }, { icon: Coins, label: 'Solana' }, { icon: Star, label: 'Invite Only' }].map((s, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-white/20">
+                      <div key={i} className="flex items-center gap-1.5 text-white/40">
                         <s.icon size={12} weight="duotone" />
                         <span className="text-[9px] uppercase tracking-[0.15em] font-mono">{s.label}</span>
                       </div>
