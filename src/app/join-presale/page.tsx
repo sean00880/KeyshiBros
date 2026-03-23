@@ -16,6 +16,7 @@ import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection } f
 import { CompleteProfile } from '@/components/presale/complete-profile';
 import { TxTracker, type TxStage } from '@/components/presale/tx-tracker';
 import { StripePayment } from '@/components/presale/stripe-payment';
+import { MobileWalletSelector } from '@/components/presale/mobile-wallet-selector';
 import { createClient } from '@/lib/supabase/client';
 
 type PaymentMethod = 'card' | 'solana';
@@ -522,19 +523,11 @@ function JoinPresalePage() {
                     <AnimatePresence>
                       {method === 'solana' && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-3">
-                          {/* Primary: AppKit connect button */}
+                          {/* Desktop: AppKit connect button (wallet-standard) */}
                           <appkit-button balance="hide" />
 
-                          {/* Specific wallet buttons (mobile deep-link friendly) */}
-                          {!isConnected && (
-                            <div className="flex flex-col gap-2">
-                              <div className="text-white/30 text-[9px] font-mono uppercase tracking-widest text-center">Or connect directly</div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <appkit-wallet-button wallet="phantom" namespace="solana" />
-                                <appkit-wallet-button wallet="solflare" namespace="solana" />
-                              </div>
-                            </div>
-                          )}
+                          {/* Mobile: Native deep link wallet buttons */}
+                          {!isConnected && <MobileWalletSelector />}
 
                           {isConnected && walletAddress && (
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
@@ -542,7 +535,6 @@ function JoinPresalePage() {
                               <span className="text-green-400 text-[10px] font-mono truncate">{walletAddress}</span>
                             </div>
                           )}
-                          <p className="text-white/30 text-[10px]">Supports Phantom, Solflare, MetaMask, Backpack, and more.</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
