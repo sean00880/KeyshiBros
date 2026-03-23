@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { List, X, User, SignOut, GoogleLogo } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { resolveProfileImage } from '@/lib/profile-image';
 
 export function StickyNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -63,8 +64,12 @@ export function StickyNav() {
   ];
 
   const displayName = account?.display_name || user?.user_metadata?.full_name || '';
-  const avatar = account?.profile_image_url || user?.user_metadata?.avatar_url || '';
   const username = account?.username || '';
+  const avatar = resolveProfileImage(
+    account?.profile_image_url,
+    username,
+    user?.user_metadata?.avatar_url || undefined
+  );
 
   return (
     <>
