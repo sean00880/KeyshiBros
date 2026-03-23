@@ -47,7 +47,14 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
     setStatus('processing');
     setErrorMsg('');
 
-    // Validate the form fields first
+    // Validate wallet address for token delivery
+    if (!walletAddress.trim()) {
+      setStatus('error');
+      setErrorMsg('Enter your Solana wallet address above for token delivery');
+      return;
+    }
+
+    // Validate the Stripe form fields
     const { error: submitError } = await elements.submit();
     if (submitError) {
       setStatus('error');

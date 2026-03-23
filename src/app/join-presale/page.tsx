@@ -554,8 +554,8 @@ function JoinPresalePage() {
                     <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">{error}</div>
                   )}
 
-                  {/* Card: Embedded Stripe Payment */}
-                  {method === 'card' && displayName && displayEmail && cardWallet.trim() && (
+                  {/* Card: Embedded Stripe Payment (always visible when card selected) */}
+                  {method === 'card' && displayName && displayEmail && (
                     <StripePayment
                       name={displayName}
                       email={displayEmail}
@@ -567,11 +567,6 @@ function JoinPresalePage() {
                       }}
                       onError={(msg) => setError(msg)}
                     />
-                  )}
-
-                  {/* Card: disabled reason if wallet not entered */}
-                  {method === 'card' && !cardWallet.trim() && (
-                    <div className="text-white/30 text-[10px] text-center font-mono">Enter your Solana wallet above to proceed</div>
                   )}
 
                   {/* Solana: Pay button */}
