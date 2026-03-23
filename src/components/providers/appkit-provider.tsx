@@ -1,23 +1,29 @@
 'use client';
 
 /**
- * AppKit Solana Provider — with WC connect fix for bugs #3843 and #3183
+ * AppKit Provider — WagmiAdapter + SolanaAdapter (Option #2)
  *
- * TELEMETRY CONFIRMED: universalProvider.connect() hangs forever.
- * display_uri never fires. connectWalletConnect never resolves.
+ * TELEMETRY PROVED universalProvider.connect() fails for Solana-only:
+ *   "Failed to publish custom payload, please try again. tag:undefined"
+ * This is a WC relay protocol bug — Solana namespace messages have
+ * malformed tags when no EVM adapter is present.
  *
- * FIX: Override the SolanaAdapter's connectWalletConnect to manually
- * call universalProvider.connect() with explicit Solana namespaces
- * and a timeout. Also manually emit display_uri if the provider
- * generates a URI but fails to emit the event.
+ * FIX: Use WagmiAdapter (creates working UniversalProvider for relay)
+ * + SolanaAdapter (handles wallet-standard + Solana tx signing).
+ * defaultNetwork: solana — user sees Solana, WC relay works via wagmi.
+ *
+ * mainnet is included ONLY for WagmiAdapter init (requires EVM chain).
+ * It's not exposed to the user — defaultNetwork is solana.
  */
 
-import { type ReactNode } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { createAppKit } from '@reown/appkit/react';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
-import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { solana, solanaTestnet, solanaDevnet, mainnet, type AppKitNetwork } from '@reown/appkit/networks';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { ConnectionController } from '@reown/appkit-controllers';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type Config, WagmiProvider } from 'wagmi';
 import { debugLog } from '@/lib/debug-telemetry';
 
 import { DefaultSIWX, SolanaVerifier } from '@reown/appkit-siwx';
@@ -26,90 +32,32 @@ import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 const IMG = (id: string) => `https://explorer-api.walletconnect.com/v3/logo/md/${id}?projectId=${projectId}`;
 
+// mainnet first for WagmiAdapter init, then Solana networks
+const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, solana, solanaTestnet, solanaDevnet];
+const queryClient = new QueryClient();
+let wagmiConfig: Config | null = null;
+
 if (typeof window !== 'undefined' && projectId) {
+  debugLog('appkit_init_start', { strategy: 'wagmi+solana', projectId: projectId.substring(0, 8) });
+
+  const wagmiAdapter = new WagmiAdapter({ projectId, networks });
+  wagmiConfig = wagmiAdapter.wagmiConfig;
+
   const solanaAdapter = new SolanaAdapter({
     wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
     registerWalletStandard: true,
   });
 
-  debugLog('appkit_init_start', { projectId: projectId.substring(0, 8) });
-
-  // Store reference to universalProvider when it's set
-  let _universalProvider: any = null;
-
-  // PATCH 1: Capture universalProvider + add display_uri listener
-  const originalSetUP = solanaAdapter.setUniversalProvider.bind(solanaAdapter);
-  (solanaAdapter as any).setUniversalProvider = async (up: any) => {
-    _universalProvider = up;
-    debugLog('set_universal_provider_called');
-
-    await originalSetUP(up);
-
-    // Add missing display_uri listener
-    up.on('display_uri', (uri: string) => {
-      debugLog('display_uri_fired', { uri_prefix: uri.substring(0, 60) });
-      ConnectionController.setUri(uri);
-    });
-
-    debugLog('set_universal_provider_patched');
-  };
-
-  // PATCH 2: Override connectWalletConnect to fix the hanging connect()
-  // Bug #3843: syncWalletConnectAccount only handles wagmi, not Solana
-  // Bug #3183: SolanaWalletConnectProvider doesn't emit events properly
-  const originalConnectWC = solanaAdapter.connectWalletConnect.bind(solanaAdapter);
-  (solanaAdapter as any).connectWalletConnect = async (chainId: string) => {
-    debugLog('adapter_connectWC_start', { chainId, hasUP: !!_universalProvider });
-
-    if (!_universalProvider) {
-      debugLog('adapter_connectWC_no_provider');
-      return originalConnectWC(chainId);
-    }
-
-    try {
-      // Manually call universalProvider.connect with Solana namespaces
-      // This bypasses the WalletConnectConnector which hangs
-      const solanaChainId = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
-
-      debugLog('adapter_connectWC_manual_connect', { solanaChainId });
-
-      const connectPromise = _universalProvider.connect({
-        optionalNamespaces: {
-          solana: {
-            methods: ['solana_signMessage', 'solana_signTransaction'],
-            chains: [solanaChainId],
-            events: ['chainChanged', 'accountsChanged'],
-          },
-        },
-      });
-
-      // Timeout after 30 seconds
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('WC connect timeout after 30s')), 30000)
-      );
-
-      await Promise.race([connectPromise, timeoutPromise]);
-
-      debugLog('adapter_connectWC_connected');
-
-      const clientId = await _universalProvider.client?.core?.crypto?.getClientId();
-      return { clientId, session: _universalProvider.session };
-    } catch (err: any) {
-      debugLog('adapter_connectWC_error', { error: err?.message || String(err) });
-      throw err;
-    }
-  };
-
-  // Configure SIWX
   const siwx = new DefaultSIWX({
     verifiers: [new SolanaVerifier()],
     storage: supabaseSIWXStorage,
   });
 
   createAppKit({
-    adapters: [solanaAdapter],
-    networks: [solana, solanaTestnet, solanaDevnet],
+    adapters: [wagmiAdapter, solanaAdapter],
+    networks,
     projectId,
+    defaultNetwork: solana,
     themeMode: 'dark',
     siwx,
     metadata: {
@@ -117,7 +65,6 @@ if (typeof window !== 'undefined' && projectId) {
       description: 'GameFi Private Sale — $KB Token on Solana',
       url: window.location.origin,
       icons: [`${window.location.origin}/icon.png`],
-      // @ts-ignore
       redirect: (() => {
         const origin = window.location.origin;
         const domainName = window.location.hostname
@@ -128,6 +75,7 @@ if (typeof window !== 'undefined' && projectId) {
     } as any,
     features: { analytics: false },
     allWallets: 'SHOW',
+    // customWallets for guaranteed display in modal
     customWallets: [
       {
         id: 'phantom', name: 'Phantom', homepage: 'https://phantom.app',
@@ -172,9 +120,17 @@ if (typeof window !== 'undefined' && projectId) {
     ],
   });
 
-  debugLog('appkit_created', { hasSiwx: true, customWallets: 5 });
+  debugLog('appkit_created', { strategy: 'wagmi+solana', hasSiwx: true, customWallets: 5 });
 }
 
 export function AppKitProvider({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+  if (!wagmiConfig) return <>{children}</>;
+
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
 }
