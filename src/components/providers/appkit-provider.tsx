@@ -1,16 +1,16 @@
 'use client';
 
 /**
- * AppKit Solana Provider with customWallets for mobile deep linking
+ * AppKit Solana Provider — with display_uri patch
  *
- * SolanaAdapter internally uses @walletconnect/universal-provider.
- * The WC session IS created — "Copy link" in the modal proves it.
+ * BUG FOUND: SolanaAdapter.setUniversalProvider() calls listenWcProvider()
+ * but does NOT pass onDisplayUri callback. The base client (appkit-base-client.js
+ * line 1514) DOES pass it. Without onDisplayUri, ConnectionController.state.wcUri
+ * is never set, so onConnectMobile()'s condition `wallet.mobile_link && wcUri`
+ * is always false — the deep link never fires.
  *
- * AppKit formats deep links as: {mobile_link}/wc?uri={encodedWcUri}
- * For HTTP links: {webapp_link}/wc?uri={encodedWcUri}
- *
- * On iOS Safari, tapping "Open" calls window.open() with the deep link.
- * The wallet app opens, reads the WC URI, connects, and redirects back.
+ * FIX: Monkey-patch the SolanaAdapter's setUniversalProvider to also
+ * listen for display_uri and call ConnectionController.setUri().
  */
 
 import { type ReactNode } from 'react';
@@ -18,6 +18,7 @@ import { createAppKit } from '@reown/appkit/react';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
 import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { ConnectionController } from '@reown/appkit-controllers';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 const IMG = (id: string) => `https://explorer-api.walletconnect.com/v3/logo/md/${id}?projectId=${projectId}`;
@@ -27,6 +28,20 @@ if (typeof window !== 'undefined' && projectId) {
     wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
     registerWalletStandard: true,
   });
+
+  // PATCH: Wrap setUniversalProvider to add the missing onDisplayUri listener
+  const originalSetUniversalProvider = solanaAdapter.setUniversalProvider.bind(solanaAdapter);
+  (solanaAdapter as any).setUniversalProvider = async (universalProvider: any) => {
+    // Call the original (registers connect/disconnect/accountsChanged listeners)
+    await originalSetUniversalProvider(universalProvider);
+
+    // Add the MISSING display_uri listener that the SolanaAdapter forgot
+    // This is what appkit-base-client.js does at line 1514
+    universalProvider.on('display_uri', (uri: string) => {
+      console.log('[AppKit Patch] display_uri received, setting wcUri');
+      ConnectionController.setUri(uri);
+    });
+  };
 
   createAppKit({
     adapters: [solanaAdapter],
