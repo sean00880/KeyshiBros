@@ -4,7 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { AppSidebar } from './app-sidebar';
 import { AppKitProvider } from '@/components/providers/appkit-provider';
-import { List, X } from '@phosphor-icons/react';
+import { CaretRight, CaretLeft } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 interface SidebarLayoutProps {
@@ -60,7 +60,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
           onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           className="lg:hidden fixed bottom-4 left-4 z-50 w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white backdrop-blur-xl"
         >
-          {mobileSidebarOpen ? <X size={20} /> : <List size={20} />}
+          {mobileSidebarOpen ? <CaretLeft size={18} weight="bold" /> : <CaretRight size={18} weight="bold" />}
         </button>
 
         {/* Mobile sidebar overlay */}
