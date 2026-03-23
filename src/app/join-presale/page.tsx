@@ -44,6 +44,7 @@ function JoinPresalePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [telegram, setTelegram] = useState('');
+  const [cardWallet, setCardWallet] = useState(''); // SOL wallet for card payers
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [txStage, setTxStage] = useState<TxStage>('idle');
@@ -131,13 +132,30 @@ function JoinPresalePage() {
     null;
 
   async function handleStripeCheckout() {
+    if (method === 'card' && !cardWallet.trim()) {
+      setError('Enter your Solana wallet address for token delivery.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
+      // Record investor first (pending until webhook confirms)
+      await fetch('/api/investors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, full_name: name, telegram_handle: telegram,
+          wallet_address: cardWallet,
+          payment_method: 'stripe',
+          usd_amount: 4500,
+          user_id: user?.id,
+        }),
+      });
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, telegram }),
+        body: JSON.stringify({ name, email, telegram, wallet_address: cardWallet }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -194,6 +212,21 @@ function JoinPresalePage() {
         setError('Transaction failed on-chain.');
       } else {
         setTxStage('success');
+        // Record investor in DB
+        fetch('/api/investors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email, full_name: name, telegram_handle: telegram,
+            wallet_address: walletAddress,
+            payment_method: 'solana',
+            solana_tx_signature: sig,
+            usd_amount: price.presaleUsd,
+            sol_amount: price.solAmount,
+            sol_price_at_purchase: price.solPrice,
+            user_id: user?.id,
+          }),
+        }).catch(() => {}); // Fire-and-forget, tx is already confirmed
       }
     } catch (err: any) {
       setTxStage('error');
@@ -430,6 +463,18 @@ function JoinPresalePage() {
                       <input type="text" value={telegram} onChange={(e) => setTelegram(e.target.value)} placeholder="@yourhandle"
                         className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors text-sm" />
                     </div>
+
+                    {/* Card: manual wallet input for token delivery */}
+                    <AnimatePresence>
+                      {method === 'card' && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                          <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono mb-1.5 block">Solana Wallet for Token Delivery *</label>
+                          <input type="text" value={cardWallet} onChange={(e) => setCardWallet(e.target.value)} placeholder="Your SOL address"
+                            className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors text-sm font-mono text-xs" />
+                          <p className="text-white/20 text-[10px] mt-1.5">$KB tokens will be sent to this address after TGE.</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Solana: AppKit wallet button */}
                     <AnimatePresence>
