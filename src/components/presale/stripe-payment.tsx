@@ -94,7 +94,7 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-2">
       {/* Product card — image on top */}
       <div className="rounded-xl bg-white/[0.05] border border-white/10 overflow-hidden">
         <div className="flex justify-center p-5 bg-white/[0.02]">
@@ -112,17 +112,15 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
       </div>
 
       {/* Stripe Payment Element — card/bank/Apple Pay fields */}
-      <div className="min-h-[200px] rounded-xl border border-white/10 p-4 bg-[#0d0d12]">
-        <PaymentElement
-          options={{
-            layout: 'accordion',
-            defaultValues: {
-              billingDetails: { name, email },
-            },
-            business: { name: 'Keyshi Bros' },
-          }}
-        />
-      </div>
+      <PaymentElement
+        options={{
+          layout: 'accordion',
+          defaultValues: {
+            billingDetails: { name, email },
+          },
+          business: { name: 'Keyshi Bros' },
+        }}
+      />
 
       {/* Status */}
       {status === 'succeeded' && (
