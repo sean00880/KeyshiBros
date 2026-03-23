@@ -330,7 +330,7 @@ function JoinPresalePage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Left: Info */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-3 flex flex-col gap-8">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-2">
               <div className="grid grid-cols-2 gap-6 mb-8">
                 {[
                   { label: 'Total Supply', value: '500,000,000', sub: '$KB Tokens' },
@@ -380,7 +380,7 @@ function JoinPresalePage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-2">
               <h3 className="text-white font-bold mb-4 flex items-center gap-2"><ShieldCheck weight="fill" size={20} /> Key Benefits of Early Ownership</h3>
               <ul className="flex flex-col gap-3">
                 {['Significant allocation (0.5% of supply) at pre-launch pricing', 'Priority access to staking and future ecosystem perks', 'Alignment with real revenue from in-game purchases and marketplace fees', 'Positioned for growth as Version 2 attracts mainstream mobile gamers into crypto'].map((b, i) => (
@@ -398,7 +398,7 @@ function JoinPresalePage() {
 
           {/* Right: Payment Form */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2">
-            <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8 flex flex-col gap-6">
+            <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/[0.03] p-2 flex flex-col gap-4">
 
               {/* Price header */}
               <div className="text-center">
