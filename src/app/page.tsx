@@ -26,10 +26,8 @@ export default function Page() {
       {/* White→Black diagonal: into Roadmap */}
       <RoadmapTimeline />
 
-      {/* Black: Presale — gated */}
-      <ComingSoonGate>
-        <PresaleModule />
-      </ComingSoonGate>
+      {/* Black: Presale */}
+      <PresaleModule />
 
       {/* Keyshi Bros characters between Presale and Command Center */}
       <div className="relative bg-kb-bg flex justify-center py-12 md:py-16">

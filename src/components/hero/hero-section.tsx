@@ -102,16 +102,16 @@ export function HeroSection() {
           {/* Compact buttons under image */}
           <div className="flex items-center gap-3">
             <a
-              href="#presale"
+              href="/join-presale"
               className="px-6 py-2.5 rounded-full bg-white text-[#0a0a0a] text-sm font-light tracking-wide hover:bg-white/90 transition-colors active:scale-[0.97]"
             >
               Enter Presale
             </a>
             <a
-              href="#"
+              href="/#presale"
               className="px-6 py-2.5 rounded-full border border-white/20 text-white/70 text-sm font-light tracking-wide hover:border-white/40 hover:text-white transition-colors active:scale-[0.97]"
             >
-              Connect Wallet
+              Learn More
             </a>
           </div>
         </motion.div>
@@ -125,16 +125,16 @@ export function HeroSection() {
         className="lg:hidden z-10 flex items-center gap-3 mt-8"
       >
         <a
-          href="#presale"
+          href="/join-presale"
           className="px-6 py-2.5 rounded-full bg-white text-black text-sm font-light tracking-wide active:scale-[0.97]"
         >
           Enter Presale
         </a>
         <a
-          href="#"
+          href="/#presale"
           className="px-6 py-2.5 rounded-full border border-white/30 text-white text-sm font-light tracking-wide active:scale-[0.97]"
         >
-          Connect Wallet
+          Learn More
         </a>
       </motion.div>
 
