@@ -16,6 +16,8 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Name and email are required' }, { status: 400 });
     }
 
+    const origin = request.headers.get('origin') || 'https://keyshibros.com';
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -25,9 +27,8 @@ export async function POST(request: Request) {
             product_data: {
               name: 'Keyshi Bros Private Sale — 0.5% Token Allocation',
               description: '5,000,000 $KB tokens (0.5% of 500M total supply). Private investor early-entry valuation.',
-              images: ['https://keyshibros.com/assets/images/keyshibros2.png'],
             },
-            unit_amount: 450000, // $4,500.00 in cents
+            unit_amount: 450000,
           },
           quantity: 1,
         },
@@ -41,15 +42,19 @@ export async function POST(request: Request) {
         allocation: '5000000',
         supply_percent: '0.5',
       },
-      success_url: `${request.headers.get('origin')}/join-presale?status=success`,
-      cancel_url: `${request.headers.get('origin')}/join-presale?status=cancelled`,
+      success_url: `${origin}/join-presale?status=success`,
+      cancel_url: `${origin}/join-presale?status=cancelled`,
     });
 
     return Response.json({ url: session.url });
-  } catch (error) {
-    console.error('Stripe checkout error:', error);
+  } catch (error: any) {
+    const message = error?.message || 'Unknown error';
+    const code = error?.code || error?.type || 'unknown';
+    console.error('Stripe checkout error:', { message, code, type: error?.type });
+
+    // Return actionable error to frontend
     return Response.json(
-      { error: 'Failed to create checkout session' },
+      { error: `Checkout failed: ${message}`, code },
       { status: 500 }
     );
   }
