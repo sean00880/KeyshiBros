@@ -67,10 +67,9 @@ if (typeof window !== 'undefined' && projectId) {
 }
 
 export function AppKitProvider({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(false);
-  useEffect(() => { setReady(true); }, []);
-
-  if (!ready || !wagmiConfig) return <>{children}</>;
+  // wagmiConfig is set at module scope on client, null on server
+  // Always render children — WagmiProvider only wraps on client
+  if (!wagmiConfig) return <>{children}</>;
 
   return (
     <WagmiProvider config={wagmiConfig}>
