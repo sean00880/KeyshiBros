@@ -26,21 +26,24 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type Config, WagmiProvider } from 'wagmi';
 import { debugLog } from '@/lib/debug-telemetry';
 
-import { DefaultSIWX, SolanaVerifier } from '@reown/appkit-siwx';
+import { DefaultSIWX } from '@reown/appkit-siwx';
 import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 const IMG = (id: string) => `https://explorer-api.walletconnect.com/v3/logo/md/${id}?projectId=${projectId}`;
 
-// mainnet first for WagmiAdapter init, then Solana networks
-const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, solana, solanaTestnet, solanaDevnet];
+// Separate network arrays — WagmiAdapter only gets EVM, AppKit gets all
+const evmNetworks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet];
+const solanaNetworks: [AppKitNetwork, ...AppKitNetwork[]] = [solana, solanaTestnet, solanaDevnet];
+const allNetworks: [AppKitNetwork, ...AppKitNetwork[]] = [...evmNetworks, ...solanaNetworks];
 const queryClient = new QueryClient();
 let wagmiConfig: Config | null = null;
 
 if (typeof window !== 'undefined' && projectId) {
   debugLog('appkit_init_start', { strategy: 'wagmi+solana', projectId: projectId.substring(0, 8) });
 
-  const wagmiAdapter = new WagmiAdapter({ projectId, networks });
+  // WagmiAdapter only gets EVM networks (official pattern)
+  const wagmiAdapter = new WagmiAdapter({ projectId, networks: evmNetworks, ssr: true });
   wagmiConfig = wagmiAdapter.wagmiConfig;
 
   const solanaAdapter = new SolanaAdapter({
@@ -48,14 +51,16 @@ if (typeof window !== 'undefined' && projectId) {
     registerWalletStandard: true,
   });
 
+  // DefaultSIWX with storage only — let it use default verifiers
+  // (includes both EIP155Verifier + SolanaVerifier by default)
+  // Passing only SolanaVerifier breaks WC flow via WagmiAdapter
   const siwx = new DefaultSIWX({
-    verifiers: [new SolanaVerifier()],
     storage: supabaseSIWXStorage,
   });
 
   createAppKit({
     adapters: [wagmiAdapter, solanaAdapter],
-    networks,
+    networks: allNetworks,
     projectId,
     defaultNetwork: solana,
     themeMode: 'dark',
@@ -73,7 +78,7 @@ if (typeof window !== 'undefined' && projectId) {
         return { native: `${domainName}://wc`, universal: `${origin}/wc` };
       })(),
     } as any,
-    features: { analytics: false },
+    features: { analytics: true, socials: [], email: false },
     allWallets: 'SHOW',
     // customWallets for guaranteed display in modal
     customWallets: [
