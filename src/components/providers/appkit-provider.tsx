@@ -35,15 +35,25 @@ if (typeof window !== 'undefined' && projectId) {
   // PATCH: Wrap setUniversalProvider to add the missing onDisplayUri listener
   const originalSetUniversalProvider = solanaAdapter.setUniversalProvider.bind(solanaAdapter);
   (solanaAdapter as any).setUniversalProvider = async (universalProvider: any) => {
+    console.log('[AppKit Patch] setUniversalProvider called — patching display_uri');
+
     // Call the original (registers connect/disconnect/accountsChanged listeners)
     await originalSetUniversalProvider(universalProvider);
 
     // Add the MISSING display_uri listener that the SolanaAdapter forgot
-    // This is what appkit-base-client.js does at line 1514
     universalProvider.on('display_uri', (uri: string) => {
-      console.log('[AppKit Patch] display_uri received, setting wcUri');
+      console.log('[AppKit Patch] display_uri FIRED! URI:', uri.substring(0, 50) + '...');
       ConnectionController.setUri(uri);
     });
+
+    // Also log ALL events from universalProvider to debug
+    const originalEmit = universalProvider.emit?.bind(universalProvider);
+    if (originalEmit) {
+      universalProvider.emit = (event: string, ...args: any[]) => {
+        console.log('[AppKit Patch] UniversalProvider event:', event);
+        return originalEmit(event, ...args);
+      };
+    }
   };
 
   // Configure SIWX using Solana Verifier
