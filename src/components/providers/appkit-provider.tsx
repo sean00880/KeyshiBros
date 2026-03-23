@@ -59,6 +59,31 @@ if (typeof window !== 'undefined' && projectId) {
     debugLog('set_universal_provider_patched');
   };
 
+  // TELEMETRY: Monitor ConnectionController state changes
+  const origSetUri = ConnectionController.setUri.bind(ConnectionController);
+  ConnectionController.setUri = (uri: string) => {
+    debugLog('connection_controller_setUri', { uri_prefix: uri?.substring(0, 40) });
+    return origSetUri(uri);
+  };
+
+  // Monitor connectWalletConnect calls
+  const origConnectWC = ConnectionController.connectWalletConnect?.bind(ConnectionController);
+  if (origConnectWC) {
+    (ConnectionController as any).connectWalletConnect = async (opts?: any) => {
+      debugLog('connect_walletconnect_called', { opts });
+      try {
+        const result = await origConnectWC(opts);
+        debugLog('connect_walletconnect_result', { success: true });
+        return result;
+      } catch (err: any) {
+        debugLog('connect_walletconnect_error', { error: err?.message || String(err) });
+        throw err;
+      }
+    };
+  } else {
+    debugLog('connect_walletconnect_NOT_FOUND');
+  }
+
   // Configure SIWX using Solana Verifier
   // IMPORTANT: Since WagmiAdapter isn't available, we strictly omit `signer` to ensure AppKit uses its 
   // ConnectionController defaults to fire signature requests native to the Solana Adapter (Phantom / Solflare).
