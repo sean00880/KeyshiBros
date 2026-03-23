@@ -58,11 +58,13 @@ if (typeof window !== 'undefined' && projectId) {
     storage: supabaseSIWXStorage,
   });
 
-  createAppKit({
+  // defaultNetwork: mainnet so WC relay works (Solana-only relay has tag:undefined bug)
+  // We switch to Solana immediately after init via modal.switchNetwork()
+  const modal = createAppKit({
     adapters: [wagmiAdapter, solanaAdapter],
     networks: allNetworks,
     projectId,
-    defaultNetwork: solana,
+    defaultNetwork: mainnet,
     themeMode: 'dark',
     siwx,
     metadata: {

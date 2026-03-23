@@ -171,9 +171,8 @@ export function AppSidebar({ user, account, role }: SidebarProps) {
               <div className="text-white/30 text-xs">No wallet connected</div>
             )}
           </div>
-          {isConnected && (
-            <appkit-button size="sm" balance="hide" />
-          )}
+          {/* @ts-ignore — web component */}
+          {isConnected && <appkit-button size="sm" balance="hide" />}
         </div>
 
         {/* Sign Out */}
