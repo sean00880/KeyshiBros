@@ -7,10 +7,11 @@ import { PresaleModule } from '@/components/presale/presale-module';
 import { RewardsDashboard } from '@/components/dashboard/rewards-dashboard';
 import { DiagonalTransition } from '@/components/ui/diagonal-transition';
 import { ComingSoonGate } from '@/components/ui/coming-soon-gate';
+import { AuthGate } from '@/components/dashboard/auth-gate';
 
-export default function Page() {
+function LandingContent() {
   return (
-    <main className="flex flex-col w-full">
+    <>
       {/* Dark: Hero */}
       <HeroSection />
 
@@ -48,6 +49,16 @@ export default function Page() {
 
       {/* White→Black diagonal: into Footer */}
       <DiagonalTransition fromColor="#ffffff" toColor="#050508" />
+    </>
+  );
+}
+
+export default function Page() {
+  return (
+    <main className="flex flex-col w-full">
+      <AuthGate>
+        <LandingContent />
+      </AuthGate>
     </main>
   );
 }

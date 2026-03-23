@@ -80,15 +80,31 @@ export async function POST(request: Request) {
 
 /**
  * GET /api/investors — Admin endpoint to list all investors
- * Requires ADMIN_SECRET header for access control.
+ * Requires x-admin-secret OR x-user-id with admin/owner/superadmin role.
  */
 export async function GET(request: Request) {
+  const supabase = createAdminClient();
+
+  // Auth: check secret OR role
   const secret = request.headers.get('x-admin-secret');
-  if (secret !== process.env.ADMIN_SECRET) {
+  const userId = request.headers.get('x-user-id');
+
+  if (secret === process.env.ADMIN_SECRET) {
+    // Legacy secret auth — OK
+  } else if (userId) {
+    const { data: roleRecord } = await supabase
+      .from('presale_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('project_id', KB_PROJECT_ID)
+      .maybeSingle();
+    if (!roleRecord) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } else {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('presale_investors')
     .select('*, presale_projects(slug, name)')
