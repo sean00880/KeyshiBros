@@ -5,7 +5,13 @@ const PRICE_ID = 'price_1TDy1YHFuoRurDKnjHTny4cq';
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error('STRIPE_SECRET_KEY not configured');
-  return new Stripe(key);
+  return new Stripe(key, {
+    // Use fetch-based HTTP client for Vercel serverless compatibility
+    // Default Node HTTP agent causes connection issues in serverless
+    httpClient: Stripe.createFetchHttpClient(),
+    maxNetworkRetries: 1,
+    timeout: 15000,
+  });
 }
 
 export async function POST(request: Request) {
@@ -39,7 +45,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     const message = error?.message || 'Unknown error';
     const code = error?.code || error?.type || 'unknown';
-    console.error('Stripe checkout error:', { message, code });
+    console.error('Stripe checkout error:', { message, code, raw: error?.rawType });
 
     return Response.json(
       { error: `Checkout failed: ${message}`, code },

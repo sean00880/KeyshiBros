@@ -4,7 +4,9 @@ import { createAdminClient } from '@/lib/supabase/server';
 const KB_PROJECT_ID = '896437f6-a401-40d0-bdee-d65d27714e5d';
 
 function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-02-25.clover' });
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    httpClient: Stripe.createFetchHttpClient(),
+  });
 }
 
 /**
