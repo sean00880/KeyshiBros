@@ -19,6 +19,7 @@ import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
 import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { ConnectionController } from '@reown/appkit-controllers';
+import { debugLog } from '@/lib/debug-telemetry';
 
 import { DefaultSIWX, SolanaVerifier } from '@reown/appkit-siwx';
 import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
@@ -32,28 +33,30 @@ if (typeof window !== 'undefined' && projectId) {
     registerWalletStandard: true,
   });
 
+  debugLog('appkit_init_start', { projectId: projectId.substring(0, 8) });
+
   // PATCH: Wrap setUniversalProvider to add the missing onDisplayUri listener
   const originalSetUniversalProvider = solanaAdapter.setUniversalProvider.bind(solanaAdapter);
   (solanaAdapter as any).setUniversalProvider = async (universalProvider: any) => {
-    console.log('[AppKit Patch] setUniversalProvider called — patching display_uri');
+    debugLog('set_universal_provider_called');
 
-    // Call the original (registers connect/disconnect/accountsChanged listeners)
     await originalSetUniversalProvider(universalProvider);
 
-    // Add the MISSING display_uri listener that the SolanaAdapter forgot
     universalProvider.on('display_uri', (uri: string) => {
-      console.log('[AppKit Patch] display_uri FIRED! URI:', uri.substring(0, 50) + '...');
+      debugLog('display_uri_fired', { uri_prefix: uri.substring(0, 60) });
       ConnectionController.setUri(uri);
     });
 
-    // Also log ALL events from universalProvider to debug
+    // Log ALL events from universalProvider
     const originalEmit = universalProvider.emit?.bind(universalProvider);
     if (originalEmit) {
       universalProvider.emit = (event: string, ...args: any[]) => {
-        console.log('[AppKit Patch] UniversalProvider event:', event);
+        debugLog('universal_provider_event', { event, hasArgs: args.length > 0 });
         return originalEmit(event, ...args);
       };
     }
+
+    debugLog('set_universal_provider_patched');
   };
 
   // Configure SIWX using Solana Verifier
@@ -147,6 +150,12 @@ if (typeof window !== 'undefined' && projectId) {
         play_store: 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp',
       },
     ],
+  });
+
+  debugLog('appkit_created', {
+    networks: ['solana', 'solanaTestnet', 'solanaDevnet'],
+    customWallets: 5,
+    hasSiwx: true,
   });
 }
 
