@@ -20,10 +20,12 @@ import { type Config, WagmiProvider } from 'wagmi';
 import { createAppKit } from '@reown/appkit/react';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { solana, type AppKitNetwork } from '@reown/appkit/networks';
+import { solana, mainnet, type AppKitNetwork } from '@reown/appkit/networks';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
-const networks = [solana] as [AppKitNetwork, ...AppKitNetwork[]];
+// WagmiAdapter requires at least one EVM network for initialization
+// mainnet included for wagmi but defaultNetwork is solana
+const networks = [solana, mainnet] as [AppKitNetwork, ...AppKitNetwork[]];
 
 const queryClient = new QueryClient();
 
