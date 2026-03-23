@@ -111,16 +111,18 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
         </div>
       </div>
 
-      {/* Stripe Payment Element — card fields render here */}
-      <PaymentElement
-        options={{
-          layout: 'tabs',
-          defaultValues: {
-            billingDetails: { name, email },
-          },
-          business: { name: 'Keyshi Bros' },
-        }}
-      />
+      {/* Stripe Payment Element — card/bank/Apple Pay fields */}
+      <div className="min-h-[200px] rounded-xl border border-white/10 p-4 bg-[#0d0d12]">
+        <PaymentElement
+          options={{
+            layout: 'accordion',
+            defaultValues: {
+              billingDetails: { name, email },
+            },
+            business: { name: 'Keyshi Bros' },
+          }}
+        />
+      </div>
 
       {/* Status */}
       {status === 'succeeded' && (
