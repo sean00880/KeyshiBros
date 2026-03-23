@@ -310,8 +310,8 @@ function JoinPresalePage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-white/[0.02] blur-[120px]" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 md:px-8 py-12 md:py-20">
-        <Link href="/" className="inline-flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors mb-12 text-sm">
-          <ArrowLeft size={16} /> Back to KeyshiBros
+        <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/20 hover:bg-white/10 transition-all mb-10 text-sm active:scale-95">
+          <ArrowLeft size={16} weight="bold" /> Back to Home
         </Link>
 
         {/* Header */}

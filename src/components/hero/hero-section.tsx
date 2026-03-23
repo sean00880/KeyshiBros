@@ -7,6 +7,7 @@ import { TelegramLogo, GooglePlayLogo, AppleLogo, TwitterLogo } from '@phosphor-
 const PLAY_STORE = "https://play.google.com/store/apps/details?id=com.zerogravity.keyshibros&hl=en_US";
 const APP_STORE = "https://apps.apple.com/tr/app/keyshi-bros/id6742747011";
 const TELEGRAM = "https://t.me/keyshibros";
+const TWITTER = "https://x.com/keyshibros";
 
 export function HeroSection() {
   const container = {
@@ -69,7 +70,7 @@ export function HeroSection() {
               { icon: TelegramLogo, href: TELEGRAM, label: 'Telegram' },
               { icon: AppleLogo, href: APP_STORE, label: 'App Store' },
               { icon: GooglePlayLogo, href: PLAY_STORE, label: 'Google Play' },
-              { icon: TwitterLogo, href: '#', label: 'Twitter' },
+              { icon: TwitterLogo, href: TWITTER, label: 'Twitter' },
             ].map((social) => (
               <motion.a
                 key={social.label}

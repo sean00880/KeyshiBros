@@ -35,14 +35,14 @@ export function StickyNav() {
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between">
-            {/* Logo — neumorphic black pill */}
-            <div className="flex items-center gap-2.5 z-50 cursor-pointer group px-5 py-2.5 rounded-2xl bg-black border border-white/10 shadow-[6px_6px_12px_rgba(0,0,0,0.6),-4px_-4px_10px_rgba(255,255,255,0.05)] hover:shadow-[8px_8px_16px_rgba(0,0,0,0.7),-6px_-6px_14px_rgba(255,255,255,0.07)] transition-shadow duration-300">
+            {/* Logo — neumorphic black pill, links to home */}
+            <a href="/" className="flex items-center gap-2.5 z-50 cursor-pointer group px-5 py-2.5 rounded-2xl bg-black border border-white/10 shadow-[6px_6px_12px_rgba(0,0,0,0.6),-4px_-4px_10px_rgba(255,255,255,0.05)] hover:shadow-[8px_8px_16px_rgba(0,0,0,0.7),-6px_-6px_14px_rgba(255,255,255,0.07)] transition-shadow duration-300 no-underline">
               <img src="/assets/images/icon.jpg" alt="KB" className="w-7 h-7 rounded-lg" />
               <span className="text-xl font-bold tracking-tighter holographic-text">
                 KEYSHI
               </span>
               <span className="text-xl font-light text-white/90 tracking-tighter">BROS</span>
-            </div>
+            </a>
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center glass-panel rounded-full px-6 py-2 gap-8">
