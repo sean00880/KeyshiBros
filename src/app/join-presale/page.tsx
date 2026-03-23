@@ -13,6 +13,7 @@ import { AppKitProvider } from '@/components/providers/appkit-provider';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import type { Provider } from '@reown/appkit-adapter-solana';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection } from '@solana/web3.js';
+import { CompleteProfile } from '@/components/presale/complete-profile';
 import { TxTracker, type TxStage } from '@/components/presale/tx-tracker';
 import { createClient } from '@/lib/supabase/client';
 
@@ -83,6 +84,10 @@ function JoinPresalePage() {
   // Fetch once on mount (server caches for 1 hour via revalidate)
   useEffect(() => { fetchPrice(); }, [fetchPrice]);
 
+  // Profile state (from accounts table)
+  const [account, setAccount] = useState<{ id: string; display_name: string; username: string; is_complete: boolean } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
   // Check Supabase auth on mount
   useEffect(() => {
     const supabase = createClient();
@@ -93,11 +98,26 @@ function JoinPresalePage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Auto-fill email from OAuth
+  // Fetch account profile when user changes
   useEffect(() => {
+    if (!user?.id) { setAccount(null); return; }
+    setProfileLoading(true);
+    fetch(`/api/profile?user_id=${user.id}`)
+      .then(r => r.json())
+      .then(data => setAccount(data.account || null))
+      .catch(() => {})
+      .finally(() => setProfileLoading(false));
+  }, [user?.id]);
+
+  // Auto-fill from account (if complete) or OAuth metadata
+  useEffect(() => {
+    if (account?.is_complete) {
+      if (account.display_name && !name) setName(account.display_name);
+    } else if (user?.user_metadata?.full_name && !name) {
+      setName(user.user_metadata.full_name);
+    }
     if (user?.email && !email) setEmail(user.email);
-    if (user?.user_metadata?.full_name && !name) setName(user.user_metadata.full_name);
-  }, [user, email, name]);
+  }, [user, account, email, name]);
 
   async function handleGoogleSignIn() {
     setAuthLoading(true);
@@ -280,6 +300,7 @@ function JoinPresalePage() {
   }
 
   const isAuthed = !!user;
+  const isProfileComplete = account?.is_complete === true;
 
   return (
     <div className="min-h-svh bg-kb-bg relative">
@@ -414,6 +435,7 @@ function JoinPresalePage() {
               <div className="h-px bg-white/10" />
 
               {/* Google OAuth gate */}
+              {/* Gate 1: Google OAuth */}
               {!isAuthed ? (
                 <div className="flex flex-col items-center gap-4 py-4">
                   <div className="text-white/50 text-sm text-center">Sign in to access the private sale</div>
@@ -431,6 +453,24 @@ function JoinPresalePage() {
                   </button>
                   <div className="text-white/20 text-[10px] font-mono">Secure OAuth via GROWSZ Identity</div>
                 </div>
+
+              /* Gate 2: Profile completion */
+              ) : profileLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                </div>
+
+              ) : !isProfileComplete ? (
+                <CompleteProfile
+                  userId={user!.id}
+                  defaultName={user?.user_metadata?.full_name || ''}
+                  defaultEmail={user?.email || ''}
+                  onComplete={(completed) => {
+                    setAccount({ ...completed, id: account?.id || '', is_complete: true });
+                    setName(completed.display_name);
+                  }}
+                />
+
               ) : (
                 <>
                   {/* Payment method toggle */}
