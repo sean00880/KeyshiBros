@@ -16,6 +16,7 @@ import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection } f
 import { CompleteProfile } from '@/components/presale/complete-profile';
 import { TxTracker, type TxStage } from '@/components/presale/tx-tracker';
 import { StripePayment } from '@/components/presale/stripe-payment';
+import { SolanaWalletConnect } from '@/components/presale/solana-wallet-connect';
 import { createClient } from '@/lib/supabase/client';
 
 type PaymentMethod = 'card' | 'solana';
@@ -522,15 +523,7 @@ function JoinPresalePage() {
                     <AnimatePresence>
                       {method === 'solana' && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-3">
-                          {/* AppKit connect button — customWallets show in modal */}
-                          <appkit-button balance="hide" />
-
-                          {isConnected && walletAddress && (
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
-                              <CheckCircle weight="fill" className="text-green-400" size={14} />
-                              <span className="text-green-400 text-[10px] font-mono truncate">{walletAddress}</span>
-                            </div>
-                          )}
+                          <SolanaWalletConnect />
                         </motion.div>
                       )}
                     </AnimatePresence>
