@@ -1,9 +1,11 @@
 import Stripe from 'stripe';
 
+const PRICE_ID = 'price_1TDy1YHFuoRurDKnjHTny4cq';
+
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error('STRIPE_SECRET_KEY not configured');
-  return new Stripe(key, { apiVersion: '2026-02-25.clover' });
+  return new Stripe(key);
 }
 
 export async function POST(request: Request) {
@@ -19,20 +21,7 @@ export async function POST(request: Request) {
     const origin = request.headers.get('origin') || 'https://keyshibros.com';
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Keyshi Bros Private Sale — 0.5% Token Allocation',
-              description: '5,000,000 $KB tokens (0.5% of 500M total supply). Private investor early-entry valuation.',
-            },
-            unit_amount: 450000,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: PRICE_ID, quantity: 1 }],
       mode: 'payment',
       customer_email: email,
       metadata: {
@@ -50,9 +39,8 @@ export async function POST(request: Request) {
   } catch (error: any) {
     const message = error?.message || 'Unknown error';
     const code = error?.code || error?.type || 'unknown';
-    console.error('Stripe checkout error:', { message, code, type: error?.type });
+    console.error('Stripe checkout error:', { message, code });
 
-    // Return actionable error to frontend
     return Response.json(
       { error: `Checkout failed: ${message}`, code },
       { status: 500 }
