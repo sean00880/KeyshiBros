@@ -3,12 +3,12 @@
 /**
  * AppKit Solana-Only Provider
  *
- * Known issue: Solana-only AppKit shows 0 wallets on mobile (GitHub #4289).
- * Perplexity research confirms:
- * - EVM wallet IDs in featuredWalletIds cause issues for Solana-only
- * - includeWalletIds + featuredWalletIds together fix empty wallet list (#3128)
- * - Domain must be in Reown Cloud allowed domains
- * - Check console for APKT002/APKT003 errors
+ * Known bug: Solana-only AppKit shows 0 wallets (GitHub #4289, #3128).
+ * The API returns 603 wallets but the SDK's chain registration race
+ * condition causes the post-fetch filter to drop all results.
+ *
+ * Workaround: Use customWallets to define wallets inline — bypasses
+ * the broken API-based wallet discovery entirely.
  */
 
 import { type ReactNode } from 'react';
@@ -18,15 +18,6 @@ import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
-
-// Solana-supporting wallet IDs only (verified via WalletConnect explorer API)
-const SOLANA_WALLET_IDS = [
-  'a797aa35c0fadbfc1a53e7f675162ed5226968b44a19ee3d24385c64d1d3c393', // Phantom
-  '4622a2b2d6af1c984494291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',  // Trust Wallet
-  '971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709', // OKX Wallet
-  '0b415a746fb9ee99cce155c2ceca0c6f6061b1dbca2d722b3ba16381d0562150', // SafePal
-  '8a0ee50d1f22f6651afcae7eb4253e52a3310b90af5daef78a8c4929a9bb99d4', // Binance Wallet
-];
 
 if (typeof window !== 'undefined' && projectId) {
   const solanaAdapter = new SolanaAdapter({
@@ -50,10 +41,61 @@ if (typeof window !== 'undefined' && projectId) {
       email: false,
       socials: false,
     },
-    // Both includeWalletIds AND featuredWalletIds needed (fix from #3128)
-    includeWalletIds: SOLANA_WALLET_IDS,
-    featuredWalletIds: SOLANA_WALLET_IDS,
     allWallets: 'SHOW',
+    // Custom wallets bypass the broken API wallet discovery
+    // These render directly in the modal without API fetch
+    customWallets: [
+      {
+        id: 'phantom',
+        name: 'Phantom',
+        homepage: 'https://phantom.app',
+        image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/a797aa35-c0fa-4dfc-1a53-e7f675162e00?projectId=' + projectId,
+        mobile_link: 'phantom://',
+        link_mode: 'https://phantom.app/ul/browse/',
+        app_store: 'https://apps.apple.com/app/phantom-crypto-wallet/id1598432977',
+        play_store: 'https://play.google.com/store/apps/details?id=app.phantom',
+      },
+      {
+        id: 'solflare',
+        name: 'Solflare',
+        homepage: 'https://solflare.com',
+        image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/1ca0bdd4-7475-4a8d-1939-af023d120600?projectId=' + projectId,
+        mobile_link: 'solflare://',
+        link_mode: 'https://solflare.com/ul/v1/browse/',
+        app_store: 'https://apps.apple.com/app/solflare-solana-wallet/id1580902717',
+        play_store: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
+      },
+      {
+        id: 'trust',
+        name: 'Trust Wallet',
+        homepage: 'https://trustwallet.com',
+        image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/7677b54f-3486-46e2-4e37-bf8747814f00?projectId=' + projectId,
+        mobile_link: 'trust://',
+        link_mode: 'https://link.trustwallet.com',
+        app_store: 'https://apps.apple.com/app/trust-wallet/id1288339409',
+        play_store: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
+      },
+      {
+        id: 'okx',
+        name: 'OKX Wallet',
+        homepage: 'https://www.okx.com/web3',
+        image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/45f2f08e-fc0c-4d62-3e63-404e72170500?projectId=' + projectId,
+        mobile_link: 'okex://main',
+        link_mode: 'https://www.okx.com/download',
+        app_store: 'https://apps.apple.com/app/okx-buy-bitcoin-eth-crypto/id1327268470',
+        play_store: 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp',
+      },
+      {
+        id: 'backpack',
+        name: 'Backpack',
+        homepage: 'https://backpack.app',
+        image_url: 'https://explorer-api.walletconnect.com/v3/logo/md/ebac7b26-e5f0-4f5a-828b-5c8b05174f00?projectId=' + projectId,
+        mobile_link: 'backpack://',
+        link_mode: 'https://backpack.app/ul/browse/',
+        app_store: 'https://apps.apple.com/app/backpack-crypto-wallet/id6444544093',
+        play_store: 'https://play.google.com/store/apps/details?id=app.backpack.mobile',
+      },
+    ],
   });
 }
 
