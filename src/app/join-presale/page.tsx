@@ -42,8 +42,6 @@ function JoinPresalePage() {
   const txParam = searchParams.get('tx');
 
   const [method, setMethod] = useState<PaymentMethod>('card');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [telegram, setTelegram] = useState('');
   const [cardWallet, setCardWallet] = useState(''); // SOL wallet for card payers
   const [loading, setLoading] = useState(false);
@@ -109,15 +107,10 @@ function JoinPresalePage() {
       .finally(() => setProfileLoading(false));
   }, [user?.id]);
 
-  // Auto-fill from account (if complete) or OAuth metadata
-  useEffect(() => {
-    if (account?.is_complete) {
-      if (account.display_name && !name) setName(account.display_name);
-    } else if (user?.user_metadata?.full_name && !name) {
-      setName(user.user_metadata.full_name);
-    }
-    if (user?.email && !email) setEmail(user.email);
-  }, [user, account, email, name]);
+  // Derive name and email from account (SSOT) → fallback to auth.users metadata
+  const displayName = account?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
+  const displayEmail = user?.email || '';
+  const displayUsername = account?.username || '';
 
   async function handleGoogleSignIn() {
     setAuthLoading(true);
@@ -143,19 +136,18 @@ function JoinPresalePage() {
     }
   }
 
-  const formValid = name.trim() && email.trim() && (method === 'card' || (method === 'solana' && isConnected));
+  const formValid = displayName && displayEmail && (
+    method === 'card' ? !!cardWallet.trim() : isConnected
+  );
 
-  // Reason the button is disabled (for user feedback)
-  const disabledReason = !name.trim() ? 'Enter your name' :
-    !email.trim() ? 'Enter your email' :
+  const disabledReason =
+    !displayName ? 'Complete your profile first' :
+    !displayEmail ? 'Email not available' :
+    method === 'card' && !cardWallet.trim() ? 'Enter your Solana wallet for token delivery' :
     method === 'solana' && !isConnected ? 'Connect your wallet first' :
     null;
 
   async function handleStripeCheckout() {
-    if (method === 'card' && !cardWallet.trim()) {
-      setError('Enter your Solana wallet address for token delivery.');
-      return;
-    }
     setLoading(true);
     setError('');
     try {
@@ -164,7 +156,9 @@ function JoinPresalePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email, full_name: name, telegram_handle: telegram,
+          email: displayEmail,
+          full_name: displayName,
+          telegram_handle: telegram,
           wallet_address: cardWallet,
           payment_method: 'stripe',
           usd_amount: 4500,
@@ -175,7 +169,12 @@ function JoinPresalePage() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, telegram, wallet_address: cardWallet }),
+        body: JSON.stringify({
+          name: displayName,
+          email: displayEmail,
+          telegram,
+          wallet_address: cardWallet,
+        }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -237,7 +236,9 @@ function JoinPresalePage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email, full_name: name, telegram_handle: telegram,
+            email: displayEmail,
+            full_name: displayName,
+            telegram_handle: telegram,
             wallet_address: walletAddress,
             payment_method: 'solana',
             solana_tx_signature: sig,
@@ -467,7 +468,6 @@ function JoinPresalePage() {
                   defaultEmail={user?.email || ''}
                   onComplete={(completed) => {
                     setAccount({ ...completed, id: account?.id || '', is_complete: true });
-                    setName(completed.display_name);
                   }}
                 />
 
@@ -483,21 +483,22 @@ function JoinPresalePage() {
                     </button>
                   </div>
 
-                  {/* Signed-in user info */}
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/10">
-                    <CheckCircle weight="fill" className="text-green-400 flex-shrink-0" size={14} />
-                    <div className="min-w-0">
-                      <div className="text-white/70 text-xs truncate">{user?.email}</div>
+                  {/* Signed-in profile info (from accounts table) */}
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-4 flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle weight="fill" className="text-green-400 flex-shrink-0" size={16} />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-white text-sm font-bold truncate">{displayName}</div>
+                        <div className="text-white/40 text-xs truncate">
+                          {displayUsername && <span className="font-mono">@{displayUsername} · </span>}
+                          {displayEmail}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Form fields */}
+                  {/* Form fields (only editable extras) */}
                   <div className="flex flex-col gap-4">
-                    <div>
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono mb-1.5 block">Full Name *</label>
-                      <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name"
-                        className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors text-sm" />
-                    </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono mb-1.5 block">Telegram Handle</label>
                       <input type="text" value={telegram} onChange={(e) => setTelegram(e.target.value)} placeholder="@yourhandle"
