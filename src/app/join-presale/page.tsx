@@ -162,7 +162,7 @@ function JoinPresalePage() {
           telegram_handle: telegram,
           wallet_address: cardWallet,
           payment_method: 'stripe',
-          usd_amount: 4500,
+          usd_amount: 4999,
           user_id: user?.id,
         }),
       });
@@ -323,7 +323,7 @@ function JoinPresalePage() {
           <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-white mb-4">Exclusive Early Ownership</h1>
           <p className="text-white/70 max-w-2xl mx-auto text-lg leading-relaxed">
             You are invited to secure <span className="text-white font-semibold">0.5% of the total Keyshibros token supply</span> —
-            5,000,000 tokens out of 500,000,000 — at a special early-entry valuation.
+            5,000,000 tokens out of 1,000,000,000 — at a special early-entry valuation.
           </p>
         </motion.div>
 
@@ -333,9 +333,9 @@ function JoinPresalePage() {
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-2">
               <div className="grid grid-cols-2 gap-6 mb-8">
                 {[
-                  { label: 'Total Supply', value: '500,000,000', sub: '$KB Tokens' },
+                  { label: 'Total Supply', value: '1,000,000,000', sub: '$KB Tokens' },
                   { label: 'Your Allocation', value: '5,000,000', sub: '0.5% of Supply' },
-                  { label: 'Investment', value: '$4,500', sub: 'USD or SOL equivalent' },
+                  { label: 'Investment', value: '$4,999', sub: 'USD or SOL equivalent' },
                   { label: 'Tax', value: '0%', sub: 'Zero Tax Forever' },
                 ].map((item, i) => (
                   <div key={i}>
@@ -402,7 +402,7 @@ function JoinPresalePage() {
 
               {/* Price header */}
               <div className="text-center">
-                <div className="text-4xl font-bold text-white tracking-tighter">$4,500</div>
+                <div className="text-4xl font-bold text-white tracking-tighter">$4,999</div>
                 <div className="text-white/60 text-sm mt-1">5,000,000 $KB Tokens</div>
                 <AnimatePresence mode="wait">
                   {method === 'solana' && (

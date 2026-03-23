@@ -34,7 +34,7 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
         email, full_name: name, telegram_handle: telegram,
         wallet_address: walletAddress, payment_method: 'stripe',
         stripe_payment_intent_id: paymentIntentId,
-        usd_amount: 4500, user_id: userId,
+        usd_amount: 4999, user_id: userId,
       }),
     }).catch(() => {});
   }, [email, name, telegram, walletAddress, userId]);
@@ -103,7 +103,7 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
         <div className="px-4 pb-4 text-center">
           <div className="text-white font-bold">Keyshi Bros Private Sale</div>
           <div className="text-white/40 text-xs mt-1">5,000,000 $KB tokens · 0.5% of supply</div>
-          <div className="text-white font-bold text-3xl font-mono mt-3">$4,500</div>
+          <div className="text-white font-bold text-3xl font-mono mt-3">$4,999</div>
           <div className="flex items-center justify-center gap-1.5 mt-2 opacity-30">
             <ShieldCheck size={10} weight="fill" className="text-white" />
             <span className="text-white text-[8px] font-mono uppercase tracking-widest">Powered by Stripe</span>
@@ -151,7 +151,7 @@ function CheckoutForm({ name, email, telegram, walletAddress, userId, onSuccess,
         ) : (
           <>
             <CreditCard size={18} weight="fill" />
-            Pay $4,500
+            Pay $4,999
           </>
         )}
       </button>

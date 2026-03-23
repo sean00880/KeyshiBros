@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 
-const PRICE_ID = 'price_1TDy1YHFuoRurDKnjHTny4cq';
+const PRICE_ID = 'price_1TE1S2HFuoRurDKn0Pefu2c6';
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;

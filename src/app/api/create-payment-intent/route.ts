@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 450000, // $4,500.00
+      amount: 499900, // $4,999.00
       currency: 'usd',
       customer: customer.id,
       metadata: {
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         supply_percent: '0.5',
       },
       automatic_payment_methods: { enabled: true },
-      description: 'Keyshi Bros Private Sale — 5M $KB tokens (0.5% of 500M supply)',
+      description: 'Keyshi Bros Private Sale — 5M $KB tokens (0.5% of 1B supply)',
     });
 
     return Response.json({

@@ -64,6 +64,7 @@ function initAppKit() {
       },
     } as any,
 
+    enableWallets: true,
     features: {
       analytics: false,
     },

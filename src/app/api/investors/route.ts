@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         stripe_session_id: stripe_session_id || null,
         stripe_payment_intent_id: stripe_payment_intent_id || null,
         solana_tx_signature: solana_tx_signature || null,
-        usd_amount: usd_amount || 4500,
+        usd_amount: usd_amount || 4999,
         sol_amount: sol_amount || null,
         sol_price_at_purchase: sol_price_at_purchase || null,
         token_allocation: 5000000,

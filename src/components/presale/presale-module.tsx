@@ -27,7 +27,7 @@ export function PresaleModule() {
             Own 0.5% of $KB
           </h2>
           <p className="text-white/50 max-w-2xl mx-auto text-lg leading-relaxed">
-            Exclusive early ownership opportunity. 5,000,000 tokens out of 500,000,000 total supply at pre-launch valuation.
+            Exclusive early ownership opportunity. 5,000,000 tokens out of 1,000,000,000 total supply at pre-launch valuation.
           </p>
         </motion.div>
 
@@ -40,10 +40,10 @@ export function PresaleModule() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
         >
           {[
-            { label: 'Total Supply', value: '500M', icon: Coins },
+            { label: 'Total Supply', value: '1B', icon: Coins },
             { label: 'Your Allocation', value: '0.5%', icon: Star },
             { label: 'Tokens', value: '5M', icon: ShieldCheck },
-            { label: 'Investment', value: '$4,500', icon: RocketLaunch },
+            { label: 'Investment', value: '$4,999', icon: RocketLaunch },
           ].map((stat, i) => (
             <div
               key={i}
@@ -98,7 +98,7 @@ export function PresaleModule() {
             className="group inline-flex items-center gap-3 px-10 py-5 rounded-full bg-white text-gray-900 font-bold text-lg tracking-wide hover:bg-gray-100 active:scale-[0.98] transition-all"
             style={{ boxShadow: '0 0 40px rgba(255,255,255,0.1)' }}
           >
-            Join Private Sale — $4,500
+            Join Private Sale — $4,999
             <CaretRight weight="bold" size={20} className="group-hover:translate-x-1 transition-transform" />
           </Link>
           <p className="text-white/30 text-xs mt-4 font-mono uppercase tracking-widest">
