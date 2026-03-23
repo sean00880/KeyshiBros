@@ -3,24 +3,25 @@
 /**
  * AppKit Solana-Only Provider
  *
- * CRITICAL: All adapter creation and createAppKit MUST be inside
- * typeof window !== 'undefined' guard. 'use client' does NOT prevent
- * module-scope code from running during SSR in Next.js.
- *
- * If createAppKit runs on server, it creates a broken modal instance
- * with no wallet-standard registry — wallets will never be detected.
+ * From Reown docs (Context7 verified):
+ * - SolanaAdapter MUST receive explicit wallet adapters for detection
+ * - registerWalletStandard: true enables detection of other installed wallets
+ * - All init MUST be inside typeof window guard (SSR poisons the singleton)
  */
 
 import { type ReactNode } from 'react';
 import { createAppKit } from '@reown/appkit/react';
-import { SolanaAdapter } from '@reown/appkit-adapter-solana';
+import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
 import { solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
+import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 
-// MUST only run on client — wallet-standard requires window/navigator
 if (typeof window !== 'undefined' && projectId) {
-  const solanaAdapter = new SolanaAdapter();
+  const solanaAdapter = new SolanaAdapter({
+    wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    registerWalletStandard: true,
+  });
 
   createAppKit({
     adapters: [solanaAdapter],
