@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * AppKit Provider — siwx-default pattern from Reown Laboratory
- * Source: apps/laboratory/src/context/AppKitContext.tsx + appKitConfigs.ts
+ * AppKit Provider — exact siwx-default pattern from Reown Laboratory
+ * Source: apps/laboratory/src/constants/appKitConfigs.ts → 'siwx-default'
  *
- * Uses EthersAdapter (EVM) + SolanaAdapter — NO WagmiProvider wrapper needed.
- * Initialization in useEffect (matching lab pattern, not module-level).
+ * Lab config: adapters: ['ethers', 'solana', 'bitcoin'], networks: AllNetworks
+ * We skip bitcoin adapter but include ALL EVM + Solana networks.
  *
  * Our additions: SupabaseSIWXStorage + SimpleVerifiers (from normie-tool)
  */
@@ -15,11 +15,20 @@ import { createAppKit } from '@reown/appkit/react';
 import { EthersAdapter } from '@reown/appkit-adapter-ethers';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import {
+  // EVM — matches lab ConstantsUtil.EvmNetworks
   mainnet,
   optimism,
   polygon,
+  zkSync,
   arbitrum,
   base,
+  baseSepolia,
+  sepolia,
+  gnosis,
+  hedera,
+  aurora,
+  mantle,
+  // Solana — matches lab ConstantsUtil.SolanaNetworks
   solana,
   solanaTestnet,
   solanaDevnet,
@@ -35,30 +44,30 @@ import {
 // --- Project ID ---
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID ?? '';
 
-// --- Networks (EVM + Solana — lab siwx-default uses AllNetworks) ---
-const evmNetworks: AppKitNetwork[] = [mainnet, optimism, polygon, arbitrum, base];
+// --- Networks: ALL networks matching lab ConstantsUtil.AllNetworks ---
+const evmNetworks: AppKitNetwork[] = [
+  mainnet, optimism, polygon, zkSync, arbitrum, base,
+  baseSepolia, sepolia, gnosis, hedera, aurora, mantle,
+];
 const solanaNetworks: AppKitNetwork[] = [solana, solanaTestnet, solanaDevnet];
 const allNetworks = [...evmNetworks, ...solanaNetworks] as [
   AppKitNetwork,
   ...AppKitNetwork[],
 ];
 
-// --- Adapters (bare instantiation, matching lab AppKitConfigUtil.ts) ---
+// --- Adapters (bare, matching lab AppKitConfigUtil.ts) ---
 const ethersAdapter = new EthersAdapter();
 const solanaAdapter = new SolanaAdapter();
 
-// --- Metadata (lab uses CoreHelperUtil.isClient() — we use typeof window) ---
+// --- Metadata (lab: CoreHelperUtil.isClient() ? origin : '') ---
 const metadata = {
   name: 'Keyshi Bros',
   description: 'GameFi Private Sale',
-  url:
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://keyshibros.com',
+  url: typeof window !== 'undefined' ? window.location.origin : '',
   icons: ['https://keyshibros.com/icon.png'],
 };
 
-// --- Provider: initializes AppKit in useEffect (matching lab AppKitContext.tsx) ---
+// --- Provider: initializes AppKit in useEffect (lab AppKitContext.tsx pattern) ---
 export function AppKitProvider({ children }: { children: ReactNode }) {
   const initialized = useRef(false);
 
@@ -75,7 +84,6 @@ export function AppKitProvider({ children }: { children: ReactNode }) {
       adapters: [ethersAdapter, solanaAdapter],
       projectId,
       networks: allNetworks,
-      defaultNetwork: solana,
       metadata,
       themeMode: 'dark' as const,
       siwx,
