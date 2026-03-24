@@ -523,11 +523,8 @@ function JoinPresalePage() {
                     <AnimatePresence>
                       {method === 'solana' && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-3">
-                          {/* AppKit connect — opens modal with ALL wallets via WC API */}
-                          {/* On mobile: modal shows deep-link wallets (Phantom, Trust, etc.) */}
-                          {/* Lab uses <AppKitButton namespace="solana" /> for chain-specific */}
+                          {/* Use native appkit-button — same as normie-tool */}
                           <appkit-button />
-                          <appkit-network-button />
                           {isConnected && walletAddress && (
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
                               <CheckCircle weight="fill" className="text-green-400" size={14} />
