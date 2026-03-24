@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
 
 /**
- * WalletConnect deep link redirect — SERVER component (matching normie-tool)
+ * WalletConnect universal link handler
  *
- * CRITICAL: Must be server-side redirect() to preserve WC query parameters.
- * Client-side useRouter().replace() drops the WC params that AppKit needs
- * to complete the wallet connection/signing flow.
+ * Wallet apps redirect here after session approval: keyshibros.com/wc?wc_ev=...
+ * Server-side redirect to root preserves WC query params in the URL.
+ * AppKit SDK (initialized at root layout) auto-detects and handles
+ * the connection from any page — no hardcoded destination needed.
  */
 export default async function WCRedirect() {
-  redirect('/join-presale');
+  redirect('/');
 }
