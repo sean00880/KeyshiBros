@@ -109,6 +109,7 @@ export function getAppKitConfig(): Omit<CreateAppKit, 'projectId'> {
       analytics: false,
       email: false,
       socials: false,
+      headless: false, // CRITICAL: must be false to show wallet list in modal
     },
     allWallets: 'SHOW',
     featuredWalletIds: [
