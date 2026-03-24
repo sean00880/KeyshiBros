@@ -7,6 +7,7 @@ declare module 'react' {
         React.HTMLAttributes<HTMLElement> & {
           balance?: string;
           size?: string;
+          namespace?: string;
         },
         HTMLElement
       >;
