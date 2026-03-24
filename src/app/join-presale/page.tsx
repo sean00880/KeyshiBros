@@ -10,7 +10,9 @@ import {
 } from '@phosphor-icons/react';
 import { useSearchParams } from 'next/navigation';
 import { AppKitProvider } from '@/components/providers/appkit-provider';
-import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
+import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
+import { AppKitButton } from '@reown/appkit/react';
+import { AppKitWalletButton } from '@reown/appkit-wallet-button/react';
 import type { Provider } from '@reown/appkit-adapter-solana';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection } from '@solana/web3.js';
 import { CompleteProfile } from '@/components/presale/complete-profile';
@@ -523,14 +525,14 @@ function JoinPresalePage() {
                     <AnimatePresence>
                       {method === 'solana' && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-3">
-                          {/* AppKit connect button — opens modal with all wallets */}
-                          <appkit-button />
+                          {/* AppKit React components — matching lab DemoContent pattern */}
+                          <AppKitButton />
                           {/* Individual wallet buttons — lab SolanaWalletButtons pattern */}
                           <div className="grid grid-cols-2 gap-2">
-                            <appkit-wallet-button wallet="phantom" />
-                            <appkit-wallet-button wallet="trust" />
-                            <appkit-wallet-button wallet="coinbase" />
-                            <appkit-wallet-button wallet="walletConnect" />
+                            <AppKitWalletButton wallet="phantom" />
+                            <AppKitWalletButton wallet="trust" />
+                            <AppKitWalletButton wallet="coinbase" />
+                            <AppKitWalletButton wallet="walletConnect" />
                           </div>
                           {isConnected && walletAddress && (
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
