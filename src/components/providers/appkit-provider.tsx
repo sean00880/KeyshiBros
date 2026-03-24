@@ -67,7 +67,7 @@ function createSIWX() {
 
 if (projectId) {
   createAppKit({
-    adapters: [wagmiAdapter, solanaAdapter],
+    adapters: [solanaAdapter, wagmiAdapter],
     projectId,
     networks: AllNetworks,
     defaultNetwork: SolanaNetworks[0],
