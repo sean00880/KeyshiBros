@@ -22,7 +22,7 @@ import { DefaultSIWX } from '@reown/appkit-siwx';
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
+const projectId = (process.env.NEXT_PUBLIC_PROJECT_ID || '').trim();
 const isClient = typeof window !== 'undefined';
 
 const allNetworks = [
