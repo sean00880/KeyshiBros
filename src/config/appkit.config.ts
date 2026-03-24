@@ -112,9 +112,10 @@ export function getAppKitConfig(): Omit<CreateAppKit, 'projectId'> {
       headless: false, // CRITICAL: must be false to show wallet list in modal
     },
     allWallets: 'SHOW',
+    // Using VERIFIED wallet IDs from api.web3modal.org
     featuredWalletIds: [
       'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
-      '4622a2b2d6af1c984494291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',  // Trust Wallet
+      '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet (correct ID)
       'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
     ],
     metadata: {
