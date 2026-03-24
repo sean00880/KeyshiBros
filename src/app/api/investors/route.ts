@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         sol_amount: sol_amount || null,
         sol_price_at_purchase: sol_price_at_purchase || null,
         token_allocation: 5000000,
-        status: payment_method === 'solana' ? 'confirmed' : 'pending',
+        status: body.status || (payment_method === 'solana' ? 'confirmed' : 'pending'),
       })
       .select('id')
       .single();
@@ -76,6 +76,43 @@ export async function POST(request: Request) {
     return Response.json({ id: data.id, status: 'recorded' });
   } catch (err) {
     console.error('[Investors API] Error:', err);
+    return Response.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/investors — Update investor status after tx confirmation
+ * Called after Solana tx is confirmed or fails on-chain.
+ */
+export async function PATCH(request: Request) {
+  try {
+    const { id, status, solana_tx_signature } = await request.json();
+    if (!id || !status) {
+      return Response.json({ error: 'id and status required' }, { status: 400 });
+    }
+
+    const supabase = createAdminClient();
+    const updateData: Record<string, any> = {
+      status,
+      updated_at: new Date().toISOString(),
+    };
+    if (solana_tx_signature) {
+      updateData.solana_tx_signature = solana_tx_signature;
+    }
+
+    const { error } = await supabase
+      .from('presale_investors')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      console.error('[Investors API] PATCH error:', error);
+      return Response.json({ error: 'Failed to update investor' }, { status: 500 });
+    }
+
+    return Response.json({ id, status });
+  } catch (err) {
+    console.error('[Investors API] PATCH error:', err);
     return Response.json({ error: 'Server error' }, { status: 500 });
   }
 }

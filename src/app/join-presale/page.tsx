@@ -201,9 +201,32 @@ function JoinPresalePage() {
     }
     setLoading(true);
     setError('');
-    setTxStage('signing');
 
     try {
+      // Phase 1: Record investor as PENDING (same as Stripe pattern)
+      // This ensures the investor is tracked even if confirmation polling fails
+      const investorRes = await fetch('/api/investors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: displayEmail,
+          full_name: displayName,
+          telegram_handle: telegram,
+          wallet_address: walletAddress,
+          delivery_wallet_address: deliveryWallet || walletAddress,
+          payment_method: 'solana',
+          usd_amount: price.presaleUsd,
+          sol_amount: price.solAmount,
+          sol_price_at_purchase: price.solPrice,
+          user_id: user?.id,
+          status: 'pending',
+        }),
+      });
+      const investorData = await investorRes.json();
+      const investorId = investorData?.id;
+
+      // Phase 2: Sign and send transaction
+      setTxStage('signing');
       const connection = new Connection(
         process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
         'confirmed'
@@ -225,6 +248,7 @@ function JoinPresalePage() {
       setTxSignature(sig);
       setTxStage('confirming');
 
+      // Phase 3: Receipt-gated confirmation (wait for on-chain confirmed status)
       const confirmation = await connection.confirmTransaction(
         { signature: sig, blockhash, lastValidBlockHeight },
         'confirmed'
@@ -233,26 +257,24 @@ function JoinPresalePage() {
       if (confirmation.value.err) {
         setTxStage('error');
         setError('Transaction failed on-chain.');
+        // Update investor record to failed
+        if (investorId) {
+          fetch('/api/investors', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: investorId, status: 'failed', solana_tx_signature: sig }),
+          }).catch(() => {});
+        }
       } else {
+        // Phase 4: Update investor record with confirmed tx signature
         setTxStage('success');
-        // Record investor in DB
-        fetch('/api/investors', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: displayEmail,
-            full_name: displayName,
-            telegram_handle: telegram,
-            wallet_address: walletAddress,
-            delivery_wallet_address: deliveryWallet || walletAddress,
-            payment_method: 'solana',
-            solana_tx_signature: sig,
-            usd_amount: price.presaleUsd,
-            sol_amount: price.solAmount,
-            sol_price_at_purchase: price.solPrice,
-            user_id: user?.id,
-          }),
-        }).catch(() => {}); // Fire-and-forget, tx is already confirmed
+        if (investorId) {
+          fetch('/api/investors', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: investorId, status: 'confirmed', solana_tx_signature: sig }),
+          }).catch(console.error);
+        }
       }
     } catch (err: any) {
       setTxStage('error');
