@@ -40,11 +40,14 @@ export function StickyNav() {
 
   async function handleSignIn() {
     const supabase = createClient();
-    const callbackUrl = new URL('/auth/callback', window.location.origin);
-    callbackUrl.searchParams.set('next', window.location.pathname);
+    const redirectTo = `${window.location.origin}/auth/callback`;
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: callbackUrl.toString(), skipBrowserRedirect: false },
+      options: {
+        redirectTo,
+        queryParams: { next: window.location.pathname },
+        skipBrowserRedirect: false,
+      },
     });
   }
 

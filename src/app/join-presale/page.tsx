@@ -121,13 +121,14 @@ function JoinPresalePage() {
       // Per-domain PKCE pattern (same as MEMELinked SessionManager):
       // Build callback URL on THIS domain with ?next= for post-auth redirect
       // Use pathname ONLY — strip query params to avoid carrying auth_error forward
-      const callbackUrl = new URL('/auth/callback', window.location.origin);
-      callbackUrl.searchParams.set('next', window.location.pathname);
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      console.log('[KB Auth] redirectTo:', redirectTo);
 
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: callbackUrl.toString(),
+          redirectTo,
+          queryParams: { next: window.location.pathname },
           skipBrowserRedirect: false,
         },
       });
