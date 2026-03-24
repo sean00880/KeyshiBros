@@ -11,8 +11,8 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { AppKitProvider } from '@/components/providers/appkit-provider';
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
-import type { Provider } from '@reown/appkit-adapter-solana';
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection } from '@solana/web3.js';
+import { type Provider, useAppKitConnection } from '@reown/appkit-adapter-solana/react';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { CompleteProfile } from '@/components/presale/complete-profile';
 import { TxTracker, type TxStage } from '@/components/presale/tx-tracker';
 import { StripePayment } from '@/components/presale/stripe-payment';
@@ -55,9 +55,10 @@ function JoinPresalePage() {
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Reown AppKit wallet
+  // Reown AppKit wallet (matches lab pattern: useAppKitConnection for connection)
   const { address: walletAddress, isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider<Provider>('solana');
+  const { connection } = useAppKitConnection();
 
   // SOL price from Jupiter oracle
   const [solPrice, setSolPrice] = useState<SolPrice | null>(null);
@@ -225,26 +226,34 @@ function JoinPresalePage() {
       const investorData = await investorRes.json();
       const investorId = investorData?.id;
 
-      // Phase 2: Sign and send transaction
+      // Phase 2: Sign and send transaction (matches lab SolanaSendTransactionTest pattern)
       setTxStage('signing');
-      const connection = new Connection(
-        process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
-        'confirmed'
-      );
-      const senderPubkey = new PublicKey(walletAddress);
+      if (!walletProvider?.publicKey || !connection) {
+        throw new Error('Wallet or connection not available');
+      }
       const PRESALE_WALLET = new PublicKey(process.env.NEXT_PUBLIC_PRESALE_SOL_WALLET!);
       const lamports = Math.floor(price.solAmount * LAMPORTS_PER_SOL);
 
+      // Balance check (lab pattern: verify before sending)
+      const balance = await connection.getBalance(walletProvider.publicKey);
+      if (balance < lamports) {
+        throw new Error(`Insufficient SOL balance. Need ${price.solAmount} SOL but have ${(balance / LAMPORTS_PER_SOL).toFixed(4)} SOL`);
+      }
+
       const transaction = new Transaction().add(
-        SystemProgram.transfer({ fromPubkey: senderPubkey, toPubkey: PRESALE_WALLET, lamports })
+        SystemProgram.transfer({
+          fromPubkey: walletProvider.publicKey,
+          toPubkey: PRESALE_WALLET,
+          lamports,
+        })
       );
 
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       transaction.recentBlockhash = blockhash;
-      transaction.feePayer = senderPubkey;
+      transaction.feePayer = walletProvider.publicKey;
 
-      const signed = await walletProvider.signAndSendTransaction(transaction);
-      const sig = typeof signed === 'string' ? signed : (signed as any).signature;
+      // signAndSendTransaction: wallet handles RPC submission (lab + Perplexity recommended)
+      const sig = await walletProvider.signAndSendTransaction(transaction);
       setTxSignature(sig);
       setTxStage('confirming');
 
