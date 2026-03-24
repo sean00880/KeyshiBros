@@ -10,7 +10,7 @@ import { createAppKit } from '@reown/appkit/react';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { DefaultSIWX } from '@reown/appkit-siwx';
-import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi';
+import { cookieStorage, cookieToInitialState, createStorage, WagmiProvider, type Config } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConstantsUtil } from '@/lib/constants';
 import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
@@ -24,6 +24,7 @@ const { AllNetworks, SolanaNetworks, FeaturedWalletIds } = ConstantsUtil;
 const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks: AllNetworks,
+  storage: createStorage({ storage: cookieStorage }) as any,
   ssr: true,
 });
 
