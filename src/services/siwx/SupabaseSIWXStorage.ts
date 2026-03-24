@@ -20,8 +20,44 @@ import { createClient } from '@/lib/supabase/client';
 
 const getSupabase = (): any => createClient();
 
+/**
+ * Preserve address as-is. Never lowercase.
+ * Solana = Base58 (case-sensitive), EVM = hex (case-insensitive).
+ * DB queries use ILIKE / citext or case-insensitive matching where needed.
+ */
 function normalizeAddress(address: string): string {
-  return address.toLowerCase();
+  return address;
+}
+
+// --- In-memory cache (bridges add→get race condition, matching normie-tool) ---
+const sessionCache = new Map<string, { session: SIWXSession; expiresAt: number }>();
+const CACHE_TTL_MS = 30_000;
+
+function cacheKey(chainId: string, address: string): string {
+  return `${chainId}:${normalizeAddress(address)}`;
+}
+function cacheSet(chainId: string, address: string, session: SIWXSession): void {
+  sessionCache.set(cacheKey(chainId, address), { session, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+function cacheGet(chainId: string, address: string): SIWXSession | null {
+  const entry = sessionCache.get(cacheKey(chainId, address));
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) { sessionCache.delete(cacheKey(chainId, address)); return null; }
+  return entry.session;
+}
+function cacheDelete(chainId: string, address: string): void {
+  sessionCache.delete(cacheKey(chainId, address));
+}
+
+// --- DB timeout protection (matching normie-tool) ---
+const DB_TIMEOUT_MS = 15_000;
+function raceTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`DB ${label} timed out after ${DB_TIMEOUT_MS}ms`)), DB_TIMEOUT_MS)
+    ),
+  ]);
 }
 
 /**
@@ -98,22 +134,28 @@ export const supabaseSIWXStorage: SIWXStorage = {
 
     if (!address || !chainId) return;
 
+    // Cache immediately (prevents sign→reopen loop on slow DB writes)
+    cacheSet(chainId, address, session);
+
     let persisted = false;
 
     try {
       const now = new Date().toISOString();
-      const { error } = await getSupabase().from('siwx_sessions_v2').upsert(
-        {
-          chain_id: chainId,
-          address: address,
-          session_data: session,
-          created_at: now,
-          updated_at: now,
-        },
-        {
-          onConflict: 'chain_id,address',
-          ignoreDuplicates: false,
-        }
+      const { error } = await raceTimeout(
+        getSupabase().from('siwx_sessions_v2').upsert(
+          {
+            chain_id: chainId,
+            address: address,
+            session_data: session,
+            created_at: now,
+            updated_at: now,
+          },
+          {
+            onConflict: 'chain_id,address',
+            ignoreDuplicates: false,
+          }
+        ),
+        'add'
       );
 
       if (error) {
@@ -140,12 +182,20 @@ export const supabaseSIWXStorage: SIWXStorage = {
   },
 
   get: async (chainId: CaipNetworkId, address: string): Promise<SIWXSession[]> => {
-    const normalizedAddress = normalizeAddress(address);
+    // Check in-memory cache first (bridges add→get race condition)
+    const cached = cacheGet(chainId, address);
+    if (cached) return [cached];
+
     try {
-      const { data, error } = await getSupabase()
-        .from('siwx_sessions_v2')
-        .select('session_data')
-        .eq('address', normalizedAddress);
+      // Use ilike for case-insensitive match (EVM hex is case-insensitive,
+      // Solana Base58 is case-sensitive but stored as-is so exact match works too)
+      const { data, error } = await raceTimeout(
+        getSupabase()
+          .from('siwx_sessions_v2')
+          .select('session_data')
+          .eq('address', address),
+        'get'
+      );
 
       if (error) throw new Error(`Failed to get sessions: ${error.message}`);
       return (data || []).map((row: any) => row.session_data as SIWXSession);
@@ -211,13 +261,16 @@ export const supabaseSIWXStorage: SIWXStorage = {
   },
 
   delete: async (chainId: CaipNetworkId, address: string): Promise<void> => {
-    const normalizedAddress = normalizeAddress(address);
+    cacheDelete(chainId, address);
     try {
-      const { error } = await getSupabase()
-        .from('siwx_sessions_v2')
-        .delete()
-        .eq('chain_id', chainId)
-        .eq('address', normalizedAddress);
+      const { error } = await raceTimeout(
+        getSupabase()
+          .from('siwx_sessions_v2')
+          .delete()
+          .eq('address', address)
+          .eq('chain_id', chainId),
+        'delete'
+      );
 
       if (error) throw new Error(error.message);
 
