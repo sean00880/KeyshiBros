@@ -8,7 +8,7 @@
  * Let the WC registry handle deep linking natively via featuredWalletIds.
  */
 
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useEffect } from 'react';
 import { createAppKit } from '@reown/appkit/react';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
@@ -96,6 +96,11 @@ export function AppKitProvider({
   children: ReactNode;
   cookies?: string | null;
 }) {
+  // Store current path so /wc can redirect back here after wallet approval
+  useEffect(() => {
+    document.cookie = `wc_return_path=${window.location.pathname};path=/;max-age=300`;
+  }, []);
+
   // SSR hydration: restore wagmi state from cookies (matching normie-tool)
   const initialState = cookieToInitialState(
     wagmiAdapter.wagmiConfig as Config,
