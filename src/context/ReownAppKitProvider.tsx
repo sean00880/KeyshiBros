@@ -14,6 +14,7 @@ import type { AppKit } from "@reown/appkit";
 import { getAppKitConfig, getWagmiAdapter, wagmiAdapter, getInitialState } from "@/config/appkit.config";
 import { projectId } from "@/config/networks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { debugLog } from "@/lib/debug-telemetry";
 
 if (!projectId) {
   console.warn("NEXT_PUBLIC_PROJECT_ID is not set");
@@ -34,8 +35,15 @@ function initializeAppKit(): AppKit | null {
   try {
     const config = getAppKitConfig();
 
+    debugLog('appkit_init_attempt', {
+      adapters: config.adapters?.length || 0,
+      networks: (config.networks as any)?.length || 0,
+      defaultNetwork: (config.defaultNetwork as any)?.name || 'unknown',
+      hasSiwx: !!config.siwx,
+    });
+
     if (!config.adapters || config.adapters.length === 0) {
-      console.error('[ReownAppKitProvider] No adapters available');
+      debugLog('appkit_init_no_adapters');
       return null;
     }
 
@@ -44,10 +52,10 @@ function initializeAppKit(): AppKit | null {
       projectId: projectId!,
     });
 
-    console.log('[ReownAppKitProvider] AppKit initialized successfully');
+    debugLog('appkit_init_success');
     return modalInstance;
-  } catch (error) {
-    console.error('[ReownAppKitProvider] Failed to initialize:', error);
+  } catch (error: any) {
+    debugLog('appkit_init_error', { error: error?.message || String(error) });
     return null;
   }
 }
