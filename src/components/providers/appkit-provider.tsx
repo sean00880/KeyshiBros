@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * AppKit Provider — siwx-default pattern adapted for Next.js App Router
+ * AppKit Provider — EXACT siwx-default from Reown Laboratory
  *
- * createAppKit MUST be called at module level (not useEffect) so that
- * AppKit hooks and web components have a store to read from on first render.
- * The 'use client' directive ensures this module only runs in the browser.
+ * Stripped to match lab 1:1. No extras. No custom SIWX storage/verifiers.
+ * Lab passes: commonAppKitConfig + adapters + networks + siwx: new DefaultSIWX()
+ * That's it. Nothing else.
  */
 
 import React, { type ReactNode } from 'react';
@@ -19,13 +19,8 @@ import {
 } from '@reown/appkit/networks';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import { DefaultSIWX } from '@reown/appkit-siwx';
-import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
-import {
-  SimpleEIP155Verifier,
-  SimpleSolanaVerifier,
-} from '@/lib/siwx/SimpleVerifiers';
 
-// --- Config ---
+// --- Matches lab ConstantsUtil ---
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID ?? '';
 
 const evmNetworks: AppKitNetwork[] = [
@@ -38,9 +33,11 @@ const allNetworks = [...evmNetworks, ...solanaNetworks] as [
   ...AppKitNetwork[],
 ];
 
+// --- Matches lab AppKitConfigUtil.ts: bare instantiation ---
 const ethersAdapter = new EthersAdapter();
 const solanaAdapter = new SolanaAdapter();
 
+// --- Matches lab commonAppKitConfig.metadata ---
 const metadata = {
   name: 'Keyshi Bros',
   description: 'GameFi Private Sale',
@@ -48,34 +45,20 @@ const metadata = {
   icons: ['https://keyshibros.com/icon.png'],
 };
 
-// --- Module-level initialization (runs once on client import) ---
+// --- Module-level createAppKit: matches lab siwx-default EXACTLY ---
+// Lab passes: { ...commonAppKitConfig, adapters, networks, siwx: new DefaultSIWX() }
+// commonAppKitConfig = { termsConditionsUrl, privacyPolicyUrl, customWallets, projectId, metadata }
+// We match all of these. No extras.
 if (typeof window !== 'undefined' && projectId) {
-  const siwx = new DefaultSIWX({
-    storage: supabaseSIWXStorage,
-    verifiers: [new SimpleEIP155Verifier(), new SimpleSolanaVerifier()],
-  });
-
   createAppKit({
     adapters: [ethersAdapter, solanaAdapter],
     projectId,
     networks: allNetworks,
     metadata,
-    themeMode: 'dark' as const,
-    siwx,
-    features: {
-      analytics: true,
-    },
-    allWallets: 'SHOW',
-    featuredWalletIds: [
-      'a797aa35c0fadbfc1a53e7f675162ed5226968b44a19ee3d24385c64d1d3c393', // Phantom
-      '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
-      'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
-      'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase Wallet
-    ],
+    siwx: new DefaultSIWX(),
   });
 }
 
-// --- Provider: passthrough, AppKit is already initialized at module level ---
 export function AppKitProvider({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
