@@ -18,7 +18,7 @@ import {
   SimpleEIP155Verifier,
   SimpleSolanaVerifier,
 } from '@/lib/siwx/SimpleVerifiers';
-import { createWagmiSigner } from '@/lib/siwx/WagmiSigner';
+// WagmiSigner not used — DefaultSIWX has built-in per-chain signers
 
 const projectId = (process.env.NEXT_PUBLIC_PROJECT_ID || '').trim();
 const isClient = typeof window !== 'undefined';
@@ -56,26 +56,20 @@ function createSIWX() {
   if (!isClient) return undefined;
 
   try {
-    const customVerifiers = [
-      new SimpleEIP155Verifier(),
-      new SimpleSolanaVerifier(),
-    ];
-    const customSigner = createWagmiSigner(wagmiAdapter.wagmiConfig as Config);
-
+    // DO NOT pass custom signer — DefaultSIWX has built-in signers for each chain.
+    // WagmiSigner only works for EVM. Passing it overrides the Solana signer,
+    // causing Solana sign requests to fail on mobile (EVM signer can't sign for Solana).
+    // Only pass custom storage (Supabase) and verifiers (chain namespace routing).
     return new DefaultSIWX({
       storage: supabaseSIWXStorage,
-      verifiers: customVerifiers,
-      signer: customSigner as any,
+      verifiers: [
+        new SimpleEIP155Verifier(),
+        new SimpleSolanaVerifier(),
+      ],
     } as any);
   } catch (error) {
-    console.error('[AppKit] SIWX init failed, falling back to defaults:', error);
-    try {
-      return new DefaultSIWX({
-        verifiers: [new SimpleEIP155Verifier(), new SimpleSolanaVerifier()],
-      });
-    } catch {
-      return undefined;
-    }
+    console.error('[AppKit] SIWX init failed, falling back to bare defaults:', error);
+    return new DefaultSIWX();
   }
 }
 
