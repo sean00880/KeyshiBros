@@ -22,11 +22,11 @@ import { DefaultSIWX } from '@reown/appkit-siwx';
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 const isClient = typeof window !== 'undefined';
 
-// Solana first = natural default
+// EVM first (matching normie-tool) to test mobile wallet deep linking
 const allNetworks = [
-  solana, solanaTestnet, solanaDevnet,
   mainnet, optimism, polygon, zkSync, arbitrum, base,
   baseSepolia, sepolia, gnosis, hedera, aurora, mantle,
+  solana, solanaTestnet, solanaDevnet,
 ] as [AppKitNetwork, ...AppKitNetwork[]];
 
 const ethersAdapter = new EthersAdapter();
