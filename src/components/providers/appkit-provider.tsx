@@ -19,7 +19,7 @@ import {
 } from '@reown/appkit/networks';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import { DefaultSIWX } from '@reown/appkit-siwx';
-import { WagmiProvider, type Config } from 'wagmi';
+import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
@@ -89,9 +89,21 @@ if (projectId) {
 
 const queryClient = new QueryClient();
 
-export function AppKitProvider({ children }: { children: ReactNode }) {
+export function AppKitProvider({
+  children,
+  cookies,
+}: {
+  children: ReactNode;
+  cookies?: string | null;
+}) {
+  // SSR hydration: restore wagmi state from cookies (matching normie-tool)
+  const initialState = cookieToInitialState(
+    wagmiAdapter.wagmiConfig as Config,
+    cookies ?? undefined,
+  );
+
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig as Config}>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>

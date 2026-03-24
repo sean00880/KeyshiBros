@@ -1,23 +1,12 @@
-"use client";
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 /**
- * WalletConnect deep link redirect page.
- * Mobile wallets redirect here after signing — we bounce back to /join-presale.
- * Same pattern as normie-tool's /wc route.
+ * WalletConnect deep link redirect — SERVER component (matching normie-tool)
+ *
+ * CRITICAL: Must be server-side redirect() to preserve WC query parameters.
+ * Client-side useRouter().replace() drops the WC params that AppKit needs
+ * to complete the wallet connection/signing flow.
  */
-export default function WCRedirect() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/join-presale');
-  }, [router]);
-
-  return (
-    <div className="min-h-svh bg-kb-bg flex items-center justify-center">
-      <div className="w-8 h-8 border-3 border-white/20 border-t-white rounded-full animate-spin" />
-    </div>
-  );
+export default async function WCRedirect() {
+  redirect('/join-presale');
 }
