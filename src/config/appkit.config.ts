@@ -110,7 +110,8 @@ export function getAppKitConfig(): Omit<CreateAppKit, 'projectId'> {
       email: false,
       socials: false,
       headless: false,
-      eip6963: true, // Enable injected wallet detection (MetaMask etc.)
+      // @ts-ignore — eip6963 exists at runtime but not in types
+      eip6963: true,
     },
     allWallets: 'SHOW',
     // Using VERIFIED wallet IDs from api.web3modal.org
