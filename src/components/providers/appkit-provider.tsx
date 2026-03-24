@@ -83,7 +83,7 @@ if (projectId) {
   createAppKit({
     adapters: [wagmiAdapter, solanaAdapter],
     projectId,
-    networks: SolanaNetworks,
+    networks: AllNetworks,
     defaultNetwork: SolanaNetworks[0],
     enableWallets: true,
     metadata,
