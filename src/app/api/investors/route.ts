@@ -11,6 +11,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       email, full_name, telegram_handle, wallet_address,
+      delivery_wallet_address,
       payment_method, stripe_session_id, stripe_payment_intent_id,
       solana_tx_signature, usd_amount, sol_amount, sol_price_at_purchase,
       user_id,
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
         full_name,
         telegram_handle: telegram_handle || null,
         wallet_address: wallet_address || null,
+        delivery_wallet_address: delivery_wallet_address || wallet_address || null,
         payment_method,
         stripe_session_id: stripe_session_id || null,
         stripe_payment_intent_id: stripe_payment_intent_id || null,

@@ -45,7 +45,7 @@ function JoinPresalePage() {
 
   const [method, setMethod] = useState<PaymentMethod>('card');
   const [telegram, setTelegram] = useState('');
-  const [cardWallet, setCardWallet] = useState(''); // SOL wallet for card payers
+  const [deliveryWallet, setDeliveryWallet] = useState(''); // SOL wallet for $KB token delivery (separate from payment wallet)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [txStage, setTxStage] = useState<TxStage>('idle');
@@ -140,13 +140,13 @@ function JoinPresalePage() {
   }
 
   const formValid = displayName && displayEmail && (
-    method === 'card' ? !!cardWallet.trim() : isConnected
+    !!deliveryWallet.trim() && (method === 'card' || isConnected)
   );
 
   const disabledReason =
     !displayName ? 'Complete your profile first' :
     !displayEmail ? 'Email not available' :
-    method === 'card' && !cardWallet.trim() ? 'Enter your Solana wallet for token delivery' :
+    !deliveryWallet.trim() ? 'Enter your Solana wallet for token delivery' :
     method === 'solana' && !isConnected ? 'Connect your wallet first' :
     null;
 
@@ -162,7 +162,8 @@ function JoinPresalePage() {
           email: displayEmail,
           full_name: displayName,
           telegram_handle: telegram,
-          wallet_address: cardWallet,
+          wallet_address: null,
+          delivery_wallet_address: deliveryWallet,
           payment_method: 'stripe',
           usd_amount: 4999,
           user_id: user?.id,
@@ -176,7 +177,7 @@ function JoinPresalePage() {
           name: displayName,
           email: displayEmail,
           telegram,
-          wallet_address: cardWallet,
+          wallet_address: deliveryWallet,
         }),
       });
       const data = await res.json();
@@ -243,6 +244,7 @@ function JoinPresalePage() {
             full_name: displayName,
             telegram_handle: telegram,
             wallet_address: walletAddress,
+            delivery_wallet_address: deliveryWallet || walletAddress,
             payment_method: 'solana',
             solana_tx_signature: sig,
             usd_amount: price.presaleUsd,
@@ -508,23 +510,10 @@ function JoinPresalePage() {
                         className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-white/30 transition-colors text-sm" />
                     </div>
 
-                    {/* Card: manual wallet input for token delivery */}
-                    <AnimatePresence>
-                      {method === 'card' && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                          <label className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-mono mb-1.5 block">Solana Wallet for Token Delivery *</label>
-                          <input type="text" value={cardWallet} onChange={(e) => setCardWallet(e.target.value)} placeholder="Your SOL address"
-                            className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-white/30 transition-colors text-sm font-mono text-xs" />
-                          <p className="text-white/40 text-[10px] mt-1.5">$KB tokens will be sent to this address after TGE.</p>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Solana: Wallet connection */}
+                    {/* Solana: Wallet connection (only on Solana tab) */}
                     <AnimatePresence>
                       {method === 'solana' && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-3">
-                          {/* Connect Wallet — defaultNetwork: solana in config */}
                           <appkit-button />
                           {isConnected && walletAddress && (
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
@@ -535,6 +524,25 @@ function JoinPresalePage() {
                         </motion.div>
                       )}
                     </AnimatePresence>
+
+                    {/* Token delivery wallet — shown on BOTH tabs */}
+                    <div>
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-mono mb-1.5 block">Solana Wallet for Token Delivery *</label>
+                      <div className="flex gap-2">
+                        <input type="text" value={deliveryWallet} onChange={(e) => setDeliveryWallet(e.target.value)} placeholder="Your SOL address for $KB tokens"
+                          className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-white/30 transition-colors text-sm font-mono text-xs" />
+                        {isConnected && walletAddress && (
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryWallet(walletAddress)}
+                            className="shrink-0 px-3 py-2 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-colors text-[10px] text-white/60 hover:text-white/90 font-mono"
+                          >
+                            Use Connected
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-white/40 text-[10px] mt-1.5">$KB tokens will be sent here after TGE. May differ from payment wallet.</p>
+                    </div>
                   </div>
 
                   {/* Tx tracker */}
@@ -563,7 +571,7 @@ function JoinPresalePage() {
                       name={displayName}
                       email={displayEmail}
                       telegram={telegram}
-                      walletAddress={cardWallet}
+                      walletAddress={deliveryWallet}
                       userId={user?.id}
                       onSuccess={() => {
                         window.location.href = '/join-presale?status=success';
