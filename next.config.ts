@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@splinetool/react-spline'],
+  transpilePackages: ['@splinetool/react-spline', '@solana/kit'],
   async headers() {
     return [
       {
