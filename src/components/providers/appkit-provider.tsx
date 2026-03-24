@@ -14,11 +14,6 @@ import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConstantsUtil } from '@/lib/constants';
 import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
-import {
-  SimpleEIP155Verifier,
-  SimpleSolanaVerifier,
-} from '@/lib/siwx/SimpleVerifiers';
-// WagmiSigner not used — DefaultSIWX has built-in per-chain signers
 
 const projectId = (process.env.NEXT_PUBLIC_PROJECT_ID || '').trim();
 const isClient = typeof window !== 'undefined';
@@ -52,23 +47,20 @@ const metadata = (() => {
 })();
 
 // --- SIWX: matching normie-tool createSIWX() exactly ---
+// Matches official example: next-siwx-multichain-supabase-storage
+// Only override storage. DefaultSIWX built-in handles:
+// - Signer: DefaultSigner (chain-aware via ConnectionController)
+// - Verifiers: EIP155Verifier + SolanaVerifier + BIP122Verifier (with nacl/bs58)
+// Custom SimpleVerifiers interfere with built-in crypto verification.
 function createSIWX() {
   if (!isClient) return undefined;
 
   try {
-    // DO NOT pass custom signer — DefaultSIWX has built-in signers for each chain.
-    // WagmiSigner only works for EVM. Passing it overrides the Solana signer,
-    // causing Solana sign requests to fail on mobile (EVM signer can't sign for Solana).
-    // Only pass custom storage (Supabase) and verifiers (chain namespace routing).
     return new DefaultSIWX({
       storage: supabaseSIWXStorage,
-      verifiers: [
-        new SimpleEIP155Verifier(),
-        new SimpleSolanaVerifier(),
-      ],
-    } as any);
+    });
   } catch (error) {
-    console.error('[AppKit] SIWX init failed, falling back to bare defaults:', error);
+    console.error('[AppKit] SIWX init failed:', error);
     return new DefaultSIWX();
   }
 }
