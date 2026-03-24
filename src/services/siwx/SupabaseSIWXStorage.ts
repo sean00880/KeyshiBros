@@ -34,19 +34,34 @@ async function syncToAccountsV2(session: SIWXSession): Promise<void> {
   if (!address || !chainId) return;
 
   try {
-    const addressHex = address.startsWith('0x') ? address.slice(2, 10) : address.slice(0, 8);
-    const username = `wallet_${addressHex}`;
-    const displayName = address.length > 10
-      ? `${address.slice(0, 6)}...${address.slice(-4)}`
-      : address;
-
-    const { data: account, error: accountError } = await getSupabase()
+    // Check if account already exists (avoids deferrable constraint upsert issue)
+    const { data: existing } = await getSupabase()
       .from('accounts_v2')
-      .upsert(
-        {
+      .select('id')
+      .eq('wallet_address', address)
+      .eq('chain_id', chainId)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing
+      await getSupabase()
+        .from('accounts_v2')
+        .update({
+          is_device_active: true,
+          last_connection_at: new Date().toISOString(),
+        })
+        .eq('id', existing.id);
+    } else {
+      // Insert new
+      const addressHex = address.startsWith('0x') ? address.slice(2, 10) : address.slice(0, 8);
+      await getSupabase()
+        .from('accounts_v2')
+        .insert({
           account_type: 'wallet',
-          username,
-          display_name: displayName,
+          username: `wallet_${addressHex}`,
+          display_name: address.length > 10
+            ? `${address.slice(0, 6)}...${address.slice(-4)}`
+            : address,
           wallet_address: address,
           chain_id: chainId,
           wallet_independence_level: 'independent',
@@ -54,18 +69,7 @@ async function syncToAccountsV2(session: SIWXSession): Promise<void> {
           auto_created_wallet: true,
           is_device_active: true,
           last_connection_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'wallet_address,chain_id',
-          ignoreDuplicates: false,
-        }
-      )
-      .select()
-      .single();
-
-    if (accountError) {
-      console.error('[SupabaseSIWXStorage] Failed to sync accounts_v2:', accountError.message);
-      return;
+        });
     }
   } catch (error) {
     console.error('[SupabaseSIWXStorage] Error syncing to accounts_v2:', error);
