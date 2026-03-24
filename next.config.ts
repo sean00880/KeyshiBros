@@ -1,16 +1,13 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  bundlePagesRouterDependencies: true,
-  transpilePackages: [
-    '@splinetool/react-spline',
-    '@solana/kit',
-    '@coinbase/cdp-sdk',
-    '@solana-program/system',
-    '@solana-program/token',
-    '@solana-program/compute-budget',
-    '@solana-program/stake',
-  ],
+  transpilePackages: ['@splinetool/react-spline'],
+  // Webpack externals — matches Reown lab pattern (apps/laboratory/next.config.mjs)
+  // Reown's own lab does NOT use Turbopack for builds — webpack only
+  webpack: (config) => {
+    config.externals.push('pino-pretty', 'lokijs', 'encoding');
+    return config;
+  },
   async headers() {
     return [
       {
