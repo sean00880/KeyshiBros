@@ -21,10 +21,11 @@ import { DefaultSIWX } from '@reown/appkit-siwx';
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 
+// Solana first — becomes natural default without explicit defaultNetwork
 const allNetworks = [
+  solana, solanaTestnet, solanaDevnet,
   mainnet, optimism, polygon, zkSync, arbitrum, base,
   baseSepolia, sepolia, gnosis, hedera, aurora, mantle,
-  solana, solanaTestnet, solanaDevnet,
 ] as [AppKitNetwork, ...AppKitNetwork[]];
 
 const ethersAdapter = new EthersAdapter();
@@ -42,7 +43,6 @@ if (projectId) {
     adapters: [ethersAdapter, solanaAdapter],
     projectId,
     networks: allNetworks,
-    defaultNetwork: solana,
     metadata,
     themeMode: 'dark' as const,
     siwx: new DefaultSIWX(),
