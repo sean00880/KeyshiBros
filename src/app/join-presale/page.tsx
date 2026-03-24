@@ -29,11 +29,11 @@ interface SolPrice {
 }
 
 export default function JoinPresaleWrapper() {
+  // AppKitProvider is already provided by SidebarLayout in layout.tsx
+  // Do NOT wrap again here — nested WagmiProvider breaks wallet state
   return (
     <Suspense fallback={<div className="min-h-svh bg-kb-bg" />}>
-      <AppKitProvider>
-        <JoinPresalePage />
-      </AppKitProvider>
+      <JoinPresalePage />
     </Suspense>
   );
 }

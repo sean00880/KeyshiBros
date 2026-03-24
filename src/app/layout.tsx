@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import { StickyNav } from "@/components/ui/sticky-nav";
 import { Footer } from "@/components/ui/footer";
 import { SidebarLayout } from "@/components/ui/sidebar-layout";
+import { AppKitProvider } from "@/components/providers/appkit-provider";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-heading",
@@ -33,11 +34,13 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased selection:bg-kb-primary/30 selection:text-white`}
       >
-        <SidebarLayout>
-          <StickyNav />
-          {children}
-          <Footer />
-        </SidebarLayout>
+        <AppKitProvider>
+          <SidebarLayout>
+            <StickyNav />
+            {children}
+            <Footer />
+          </SidebarLayout>
+        </AppKitProvider>
       </body>
     </html>
   );

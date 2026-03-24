@@ -3,7 +3,6 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { AppSidebar } from './app-sidebar';
-import { AppKitProvider } from '@/components/providers/appkit-provider';
 import { CaretRight, CaretLeft } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -44,12 +43,11 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
       .finally(() => setLoading(false));
   }, [user?.id]);
 
-  // Not authenticated → no sidebar
+  // Not authenticated → no sidebar, AppKitProvider already in layout.tsx
   if (loading || !user) return <>{children}</>;
 
   return (
-    <AppKitProvider>
-      <div className="flex h-dvh w-full overflow-hidden bg-kb-bg">
+    <div className="flex h-dvh w-full overflow-hidden bg-kb-bg">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block flex-shrink-0">
           <AppSidebar user={user} account={account} role={role} />
@@ -92,6 +90,5 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
           {children}
         </main>
       </div>
-    </AppKitProvider>
   );
 }
