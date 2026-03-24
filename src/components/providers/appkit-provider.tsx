@@ -100,6 +100,52 @@ export function AppKitProvider({
     document.cookie = `wc_return_path=${window.location.pathname};path=/;max-age=300`;
   }, []);
 
+  // Mobile resume reconciler (matches normie-tool SIWXResumeReconciler pattern)
+  // On mobile Safari, when user returns from wallet app, visibilitychange fires.
+  // DefaultSIWX relies on WC relay callback which may not fire reliably on resume.
+  // This manually triggers SIWX check after page becomes visible again.
+  useEffect(() => {
+    let lastHidden = 0;
+
+    const handleVisibility = async () => {
+      if (document.visibilityState === 'hidden') {
+        lastHidden = Date.now();
+        return;
+      }
+      // Only reconcile if page was hidden for >1s (actual app switch, not tab flicker)
+      if (Date.now() - lastHidden < 1000) return;
+
+      try {
+        // Dynamically import to avoid SSR issues
+        const { ChainController } = await import('@reown/appkit-controllers');
+        const caipAddress = ChainController.getActiveCaipAddress?.();
+        if (!caipAddress) return; // No wallet connected
+
+        const { OptionsController } = await import('@reown/appkit-controllers');
+        const siwx = OptionsController.state.siwx;
+        if (!siwx) return;
+
+        const [namespace, chainId, address] = caipAddress.split(':');
+        const sessions = await siwx.getSessions(`${namespace}:${chainId}` as any, address!);
+        if (sessions.length > 0) return; // Already signed
+
+        // Connected but not signed — open sign modal
+        const { ModalController } = await import('@reown/appkit-controllers');
+        await ModalController.open({ view: 'SIWXSignMessage' });
+      } catch (e) {
+        console.error('[AppKit] Resume reconcile error:', e);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+    };
+  }, []);
+
   const initialState = cookieToInitialState(
     wagmiAdapter.wagmiConfig as Config,
     cookies ?? undefined,
