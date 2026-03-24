@@ -47,6 +47,31 @@ function initializeAppKit(): AppKit | null {
       return null;
     }
 
+    // INTERCEPT: Log all fetch calls to web3modal API to see wallet requests
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request)?.url || '';
+      if (url.includes('web3modal') || url.includes('walletconnect')) {
+        debugLog('sdk_fetch', {
+          url: url.substring(0, 200),
+          method: (args[1] as any)?.method || 'GET',
+        });
+        const response = await originalFetch(...args);
+        const cloned = response.clone();
+        try {
+          const body = await cloned.json();
+          debugLog('sdk_fetch_response', {
+            url: url.substring(0, 100),
+            count: body?.count,
+            dataLength: body?.data?.length,
+            status: response.status,
+          });
+        } catch {}
+        return response;
+      }
+      return originalFetch(...args);
+    };
+
     modalInstance = createAppKit({
       ...config,
       projectId: projectId!,
