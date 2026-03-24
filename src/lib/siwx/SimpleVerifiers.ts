@@ -187,23 +187,12 @@ export class SimpleSolanaVerifier extends SimpleBaseVerifier {
   protected readonly defaultChainId = DEFAULT_SOLANA_CHAIN_ID;
 
   protected validateSignatureFormat(signature: string): boolean {
-    // Solana signatures are base58 encoded, ~88 characters
-    // No 0, O, I, l characters in base58
-
-    if (signature.startsWith('0x')) {
-      return false;
-    }
-
-    if (signature.length < 80 || signature.length > 120) {
-      return false;
-    }
-
-    // Check for invalid base58 characters
-    if (/[0OIl]/.test(signature)) {
-      return false;
-    }
-
-    return true;
+    // Solana signatures via WalletConnect can arrive in various formats:
+    // - Base58 (~88 chars, native Solana)
+    // - Hex with 0x prefix (via WC relay)
+    // - Base64 (some wallet implementations)
+    // Accept any non-empty signature — real verification is server-side.
+    return signature.length > 0;
   }
 }
 
