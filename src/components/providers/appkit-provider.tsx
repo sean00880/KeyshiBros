@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * AppKit Provider — WagmiAdapter + SolanaAdapter (matching normie-tool)
+ * AppKit Provider — exact normie-tool pattern
  *
- * WagmiAdapter is required for WalletConnect relay which powers mobile
- * deep linking (Safari → wallet app → connect + sign → back).
- * EthersAdapter alone cannot create WC sessions for mobile.
+ * WagmiAdapter + SolanaAdapter, NO customWallets.
+ * customWallets bypass WC relay and break mobile deep linking.
+ * Let the WC registry handle deep linking natively via featuredWalletIds.
  */
 
 import React, { type ReactNode } from 'react';
@@ -25,14 +25,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || '';
 const isClient = typeof window !== 'undefined';
 
-// EVM first (normie-tool order) + Solana
 const allNetworks = [
   mainnet, optimism, polygon, zkSync, arbitrum, base,
   baseSepolia, sepolia, gnosis, hedera, aurora, mantle,
   solana, solanaTestnet, solanaDevnet,
 ] as [AppKitNetwork, ...AppKitNetwork[]];
 
-// WagmiAdapter — drives WC relay for mobile deep linking
 const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks: allNetworks,
@@ -41,27 +39,30 @@ const wagmiAdapter = new WagmiAdapter({
 
 const solanaAdapter = new SolanaAdapter();
 
-const metadata = {
-  name: 'Keyshi Bros',
-  description: 'GameFi Private Sale',
-  url: isClient ? window.location.origin : 'https://keyshibros.com',
-  icons: ['https://keyshibros.com/icon.png'],
-  redirect: isClient
-    ? {
-        native: 'keyshibros://wc',
-        universal: `${window.location.origin}/wc`,
-      }
-    : {
-        native: 'keyshibros://wc',
-        universal: 'https://keyshibros.com/wc',
-      },
-};
+// Metadata with redirect — matching normie-tool exactly
+const metadata = (() => {
+  const origin = isClient ? window.location.origin : 'https://keyshibros.com';
+  const hostname = isClient ? window.location.hostname : 'keyshibros.com';
+  const domainName = hostname.replace(/^www\./, '').replace(/\.(com|org|net|io|app)$/, '');
+
+  return {
+    name: 'Keyshi Bros',
+    description: 'GameFi Private Sale',
+    url: origin,
+    icons: ['https://keyshibros.com/icon.png'],
+    redirect: {
+      native: `${domainName}://wc`,
+      universal: `${origin}/wc`,
+    },
+  };
+})();
 
 if (projectId) {
   createAppKit({
     adapters: [wagmiAdapter, solanaAdapter],
     projectId,
     networks: allNetworks,
+    defaultNetwork: allNetworks[0],
     enableWallets: true,
     metadata,
     themeMode: 'dark' as const,
@@ -72,43 +73,17 @@ if (projectId) {
       socials: false,
       headless: false,
     },
+    // Show ALL wallets — WC registry handles deep linking natively
     allWallets: 'SHOW',
+    // Featured wallets shown at top (hex IDs from WC Explorer)
     featuredWalletIds: [
-      'a797aa35c0fadbfc1a53e7f675162ed5226968b44a19ee3d24385c64d1d3c393', // Phantom
-      '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
       'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
+      '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
       'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase Wallet
+      'a797aa35c0fadbfc1a53e7f675162ed5226968b44a19ee3d24385c64d1d3c393', // Phantom
       '1ca0bdd4747578705b1939af023d120677c64fe6ca76add81fda36e350605e79', // Solflare
     ],
-    customWallets: [
-      {
-        id: 'phantom-custom',
-        name: 'Phantom',
-        homepage: 'https://phantom.app',
-        image_url: 'https://registry.walletconnect.com/v2/logo/md/a797aa35c0fadbfc1a53e7f675162ed5226968b44a19ee3d24385c64d1d3c393',
-        mobile_link: 'phantom://',
-        app_store: 'https://apps.apple.com/app/phantom-solana-wallet/id1598432977',
-        play_store: 'https://play.google.com/store/apps/details?id=app.phantom',
-      },
-      {
-        id: 'trust-custom',
-        name: 'Trust Wallet',
-        homepage: 'https://trustwallet.com',
-        image_url: 'https://registry.walletconnect.com/v2/logo/md/4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',
-        mobile_link: 'trust://',
-        app_store: 'https://apps.apple.com/app/trust-crypto-bitcoin-wallet/id1288339409',
-        play_store: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
-      },
-      {
-        id: 'solflare-custom',
-        name: 'Solflare',
-        homepage: 'https://solflare.com',
-        image_url: 'https://registry.walletconnect.com/v2/logo/md/1ca0bdd4747578705b1939af023d120677c64fe6ca76add81fda36e350605e79',
-        mobile_link: 'solflare://',
-        app_store: 'https://apps.apple.com/app/solflare-solana-wallet/id1580902717',
-        play_store: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
-      },
-    ],
+    // NO customWallets — they bypass WC relay and break mobile deep linking
   });
 }
 
