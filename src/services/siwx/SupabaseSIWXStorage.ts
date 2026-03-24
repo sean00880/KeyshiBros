@@ -49,9 +49,34 @@ function cacheDelete(chainId: string, address: string): void {
   sessionCache.delete(cacheKey(chainId, address));
 }
 
+// --- Session expiry validation (matching normie-tool 24h TTL) ---
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+function isSessionValid(session: SIWXSession): boolean {
+  try {
+    // Check issuedAt from session data or parse from message
+    let issuedAt: string | undefined = session?.data?.issuedAt as string | undefined;
+    if (!issuedAt && typeof (session?.data as any)?.message === 'string') {
+      const match = ((session.data as any).message as string).match(/Issued At:\s*(\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/i);
+      if (match?.[1]) issuedAt = match[1];
+    }
+    if (!issuedAt) return true; // No timestamp = trust it (new session)
+
+    const issuedDate = new Date(issuedAt);
+    if (isNaN(issuedDate.getTime())) return true;
+
+    return (issuedDate.getTime() + SESSION_TTL_MS) > Date.now();
+  } catch {
+    return true; // On error, trust the session
+  }
+}
+
+// --- Active address tracking (scoped delete, matching normie-tool) ---
+const _activeAddresses = new Set<string>();
+
 // --- DB timeout protection (matching normie-tool) ---
 const DB_TIMEOUT_MS = 15_000;
-function raceTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+function raceTimeout<T>(promise: Promise<T> | PromiseLike<T> | any, label: string): Promise<any> {
   return Promise.race([
     promise,
     new Promise<never>((_, reject) =>
@@ -113,12 +138,11 @@ async function syncToAccountsV2(session: SIWXSession): Promise<void> {
 }
 
 async function cleanupAccountsV2(chainId: CaipNetworkId, address: string): Promise<void> {
-  const normalizedAddress = normalizeAddress(address);
   try {
     const { error } = await getSupabase()
       .from('accounts_v2')
       .update({ is_device_active: false })
-      .eq('wallet_address', normalizedAddress)
+      .eq('wallet_address', address)
       .eq('chain_id', chainId);
 
     if (error) console.error('[SupabaseSIWXStorage] Failed to cleanup accounts_v2:', error);
@@ -136,6 +160,7 @@ export const supabaseSIWXStorage: SIWXStorage = {
 
     // Cache immediately (prevents sign→reopen loop on slow DB writes)
     cacheSet(chainId, address, session);
+    _activeAddresses.add(address);
 
     let persisted = false;
 
@@ -184,11 +209,13 @@ export const supabaseSIWXStorage: SIWXStorage = {
   get: async (chainId: CaipNetworkId, address: string): Promise<SIWXSession[]> => {
     // Check in-memory cache first (bridges add→get race condition)
     const cached = cacheGet(chainId, address);
-    if (cached) return [cached];
+    if (cached) {
+      if (isSessionValid(cached)) return [cached];
+      cacheDelete(chainId, address);
+    }
 
     try {
-      // Use ilike for case-insensitive match (EVM hex is case-insensitive,
-      // Solana Base58 is case-sensitive but stored as-is so exact match works too)
+      // citext column handles case-insensitive matching at DB level
       const { data, error } = await raceTimeout(
         getSupabase()
           .from('siwx_sessions_v2')
@@ -198,7 +225,10 @@ export const supabaseSIWXStorage: SIWXStorage = {
       );
 
       if (error) throw new Error(`Failed to get sessions: ${error.message}`);
-      return (data || []).map((row: any) => row.session_data as SIWXSession);
+      // Filter expired sessions (24h TTL, matching normie-tool)
+      return (data || [])
+        .map((row: any) => row.session_data as SIWXSession)
+        .filter(isSessionValid);
     } catch (error) {
       console.error('[SupabaseSIWXStorage] ⚠️ Failed to get sessions:', error);
       return [];
@@ -275,9 +305,9 @@ export const supabaseSIWXStorage: SIWXStorage = {
       if (error) throw new Error(error.message);
 
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('siwx-session-deleted', { detail: { address: normalizedAddress, chainId } }));
+        window.dispatchEvent(new CustomEvent('siwx-session-deleted', { detail: { address: address, chainId } }));
       }
-      await cleanupAccountsV2(chainId, normalizedAddress);
+      await cleanupAccountsV2(chainId, address);
     } catch (error) {
       console.error('[SupabaseSIWXStorage] ⚠️ Failed to delete sessions:', error);
     }
