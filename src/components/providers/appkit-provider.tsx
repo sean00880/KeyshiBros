@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * AppKit Provider — WagmiAdapter + SolanaAdapter
- * Solana default chain, configured via ConstantsUtil for easy chain management.
+ * AppKit Provider — WagmiAdapter + SolanaAdapter + full SIWX stack
+ * Matches normie-tool SIWX coordination: custom storage, verifiers, signer.
  */
 
 import React, { type ReactNode, useEffect } from 'react';
@@ -13,12 +13,19 @@ import { DefaultSIWX } from '@reown/appkit-siwx';
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConstantsUtil } from '@/lib/constants';
+import { supabaseSIWXStorage } from '@/services/siwx/SupabaseSIWXStorage';
+import {
+  SimpleEIP155Verifier,
+  SimpleSolanaVerifier,
+} from '@/lib/siwx/SimpleVerifiers';
+import { createWagmiSigner } from '@/lib/siwx/WagmiSigner';
 
 const projectId = (process.env.NEXT_PUBLIC_PROJECT_ID || '').trim();
 const isClient = typeof window !== 'undefined';
 
 const { AllNetworks, SolanaNetworks, FeaturedWalletIds } = ConstantsUtil;
 
+// WagmiAdapter needs AllNetworks for WC relay
 const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks: AllNetworks,
@@ -44,16 +51,44 @@ const metadata = (() => {
   };
 })();
 
+// --- SIWX: matching normie-tool createSIWX() exactly ---
+function createSIWX() {
+  if (!isClient) return undefined;
+
+  try {
+    const customVerifiers = [
+      new SimpleEIP155Verifier(),
+      new SimpleSolanaVerifier(),
+    ];
+    const customSigner = createWagmiSigner(wagmiAdapter.wagmiConfig as Config);
+
+    return new DefaultSIWX({
+      storage: supabaseSIWXStorage,
+      verifiers: customVerifiers,
+      signer: customSigner as any,
+    } as any);
+  } catch (error) {
+    console.error('[AppKit] SIWX init failed, falling back to defaults:', error);
+    try {
+      return new DefaultSIWX({
+        verifiers: [new SimpleEIP155Verifier(), new SimpleSolanaVerifier()],
+      });
+    } catch {
+      return undefined;
+    }
+  }
+}
+
 if (projectId) {
   createAppKit({
     adapters: [wagmiAdapter, solanaAdapter],
     projectId,
-    networks: SolanaNetworks,        // Solana only
-    defaultNetwork: SolanaNetworks[0], // Solana mainnet
+    networks: SolanaNetworks,
+    defaultNetwork: SolanaNetworks[0],
     enableWallets: true,
     metadata,
     themeMode: 'dark' as const,
-    siwx: new DefaultSIWX(),
+    siwx: createSIWX(),
     features: {
       analytics: false,
       email: false,
