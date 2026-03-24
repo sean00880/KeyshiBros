@@ -10,12 +10,13 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@ethersproject/sha2": "5.8.0",
     "@phosphor-icons/react": "^2.1.10",
-    "@reown/appkit": "^1.8.12",
-    "@reown/appkit-adapter-solana": "^1.8.12",
-    "@reown/appkit-adapter-wagmi": "^1.8.19",
-    "@reown/appkit-siwx": "^1.8.19",
-    "@reown/appkit-wallet-button": "^1.8.19",
+    "@reown/appkit": "1.8.19",
+    "@reown/appkit-adapter-ethers": "1.8.19",
+    "@reown/appkit-adapter-solana": "1.8.19",
+    "@reown/appkit-siwx": "1.8.19",
+    "@reown/appkit-wallet-button": "1.8.19",
     "@solana/kit": "^2.3.0",
     "@solana/wallet-adapter-wallets": "^0.19.37",
     "@solana/web3.js": "^1.98.4",
@@ -23,10 +24,10 @@
     "@stripe/stripe-js": "^8.11.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.3",
-    "@tanstack/react-query": "^5.95.2",
     "axios": "^1.13.6",
     "bs58": "^6.0.0",
     "clsx": "^2.1.1",
+    "ethers": "6.14.0",
     "framer-motion": "^12.0.0",
     "gifuct-js": "^2.1.2",
     "lucide-react": "^0.468.0",
@@ -35,9 +36,7 @@
     "react-dom": "^19.0.0",
     "stripe": "^20.4.1",
     "tailwind-merge": "^3.0.0",
-    "tweetnacl": "^1.0.3",
-    "viem": "^2.47.6",
-    "wagmi": "^3.6.0"
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
