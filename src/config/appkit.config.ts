@@ -105,14 +105,9 @@ export function getAppKitConfig(): Omit<CreateAppKit, 'projectId'> {
     defaultNetwork: networks[0], // mainnet — for WC relay to work
     themeMode: 'dark' as const,
     siwx: isClient ? createSIWX() : undefined,
-    features: {
-      analytics: false,
-      email: false,
-      socials: false,
-      headless: false,
-      // @ts-ignore — eip6963 exists at runtime but not in types
-      eip6963: true,
-    },
+    // NO feature overrides — let Reown Cloud defaults handle everything
+    // Normie-tool has email:false, socials:false but ALSO shows wallets
+    // We need to isolate if features config is causing 0 wallets
     allWallets: 'SHOW',
     // Using VERIFIED wallet IDs from api.web3modal.org
     featuredWalletIds: [
