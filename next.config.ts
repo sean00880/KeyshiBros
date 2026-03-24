@@ -1,7 +1,16 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@splinetool/react-spline', '@solana/kit'],
+  bundlePagesRouterDependencies: true,
+  transpilePackages: [
+    '@splinetool/react-spline',
+    '@solana/kit',
+    '@coinbase/cdp-sdk',
+    '@solana-program/system',
+    '@solana-program/token',
+    '@solana-program/compute-budget',
+    '@solana-program/stake',
+  ],
   async headers() {
     return [
       {
