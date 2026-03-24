@@ -32,7 +32,7 @@ export function getWagmiAdapter(): WagmiAdapter | null {
   if (!_wagmiAdapter) {
     _wagmiAdapter = new WagmiAdapter({
       projectId,
-      networks: EvmNetworks as any,
+      networks: AllNetworks as any, // Must include ALL networks (same as MEMELinked)
       storage: createStorage({ storage: cookieStorage }),
       ssr: true,
     });
@@ -109,7 +109,8 @@ export function getAppKitConfig(): Omit<CreateAppKit, 'projectId'> {
       analytics: false,
       email: false,
       socials: false,
-      headless: false, // CRITICAL: must be false to show wallet list in modal
+      headless: false,
+      eip6963: true, // Enable injected wallet detection (MetaMask etc.)
     },
     allWallets: 'SHOW',
     // Using VERIFIED wallet IDs from api.web3modal.org
