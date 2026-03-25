@@ -166,7 +166,7 @@ export default function AdminPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/[0.03]">
-                  {['Investor', 'Payment Wallet', 'Delivery Wallet', 'Method', 'Amount', 'Status', 'Date'].map((h) => (
+                  {['Investor', 'Receiving SOL Wallet', 'Method', 'Amount', 'Status', 'Date'].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-white/30 font-mono font-normal">{h}</th>
                   ))}
                 </tr>
@@ -187,23 +187,13 @@ export default function AdminPage() {
                         {inv.telegram_handle && <div className="text-white/20 text-xs">{inv.telegram_handle}</div>}
                       </td>
                       <td className="px-4 py-3">
-                        {inv.wallet_address ? (
-                          <button onClick={() => copyToClipboard(inv.wallet_address!)} className="flex items-center gap-1.5 text-white/50 hover:text-white/80 transition-colors font-mono text-xs" title="Click to copy">
-                            {inv.wallet_address.slice(0, 6)}...{inv.wallet_address.slice(-4)}
-                            <Copy size={12} />
-                          </button>
-                        ) : (
-                          <span className="text-white/20 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
                         {inv.delivery_wallet_address ? (
-                          <button onClick={() => copyToClipboard(inv.delivery_wallet_address!)} className="flex items-center gap-1.5 text-kb-primary/70 hover:text-kb-primary transition-colors font-mono text-xs" title="Click to copy delivery wallet">
+                          <button onClick={() => copyToClipboard(inv.delivery_wallet_address!)} className="flex items-center gap-1.5 text-kb-primary/70 hover:text-kb-primary transition-colors font-mono text-xs" title="Click to copy — this is where $KB tokens will be sent">
                             {inv.delivery_wallet_address.slice(0, 6)}...{inv.delivery_wallet_address.slice(-4)}
                             <Copy size={12} />
                           </button>
                         ) : (
-                          <span className="text-white/20 text-xs">—</span>
+                          <span className="text-white/20 text-xs">Not provided</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
