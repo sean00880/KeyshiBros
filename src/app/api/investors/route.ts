@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { PRODUCTS, type ProductId } from '@/lib/presale-products';
 
 const KB_PROJECT_ID = '896437f6-a401-40d0-bdee-d65d27714e5d';
 
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       email, full_name, telegram_handle, wallet_address,
-      delivery_wallet_address,
+      delivery_wallet_address, product_id,
       payment_method, stripe_session_id, stripe_payment_intent_id,
       solana_tx_signature, usd_amount, sol_amount, sol_price_at_purchase,
       user_id,
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     if (!email || !full_name || !payment_method) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const product = PRODUCTS[(product_id || 'main') as ProductId] || PRODUCTS.main;
 
     const supabase = createAdminClient();
 
@@ -59,10 +62,10 @@ export async function POST(request: Request) {
         stripe_session_id: stripe_session_id || null,
         stripe_payment_intent_id: stripe_payment_intent_id || null,
         solana_tx_signature: solana_tx_signature || null,
-        usd_amount: usd_amount || 4999,
+        usd_amount: usd_amount || product.usdAmount,
         sol_amount: sol_amount || null,
         sol_price_at_purchase: sol_price_at_purchase || null,
-        token_allocation: 5000000,
+        token_allocation: product.tokenAllocation,
         status: body.status || (payment_method === 'solana' ? 'confirmed' : 'pending'),
       })
       .select('id')

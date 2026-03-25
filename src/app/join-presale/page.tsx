@@ -18,6 +18,7 @@ import { TxTracker, type TxStage } from '@/components/presale/tx-tracker';
 import { StripePayment } from '@/components/presale/stripe-payment';
 import { SolanaWalletConnect } from '@/components/presale/solana-wallet-connect';
 import { createClient } from '@/lib/supabase/client';
+import { isAdmin, getAvailableProducts, type ProductId, type PresaleProduct, PRODUCTS } from '@/lib/presale-products';
 
 type PaymentMethod = 'card' | 'solana';
 
@@ -44,6 +45,7 @@ function JoinPresalePage() {
   const txParam = searchParams.get('tx');
 
   const [method, setMethod] = useState<PaymentMethod>('card');
+  const [selectedProduct, setSelectedProduct] = useState<ProductId>('main');
   const [telegram, setTelegram] = useState('');
   const [deliveryWallet, setDeliveryWallet] = useState(''); // SOL wallet for $KB token delivery (separate from payment wallet)
   const [loading, setLoading] = useState(false);
@@ -65,11 +67,13 @@ function JoinPresalePage() {
   const [priceLoading, setPriceLoading] = useState(true);
   const [priceError, setPriceError] = useState(false);
 
+  const product = PRODUCTS[selectedProduct];
+
   const fetchPrice = useCallback(async () => {
     setPriceLoading(true);
     setPriceError(false);
     try {
-      const res = await fetch('/api/sol-price');
+      const res = await fetch(`/api/sol-price?product=${selectedProduct}`);
       if (res.ok) {
         setSolPrice(await res.json());
       } else {
@@ -82,8 +86,8 @@ function JoinPresalePage() {
     }
   }, []);
 
-  // Fetch once on mount (server caches for 1 hour via revalidate)
-  useEffect(() => { fetchPrice(); }, [fetchPrice]);
+  // Fetch on mount and when product changes
+  useEffect(() => { fetchPrice(); }, [fetchPrice, selectedProduct]);
 
   // Profile state (from accounts table)
   const [account, setAccount] = useState<{ id: string; display_name: string; username: string; is_complete: boolean } | null>(null);
@@ -166,7 +170,8 @@ function JoinPresalePage() {
           wallet_address: null,
           delivery_wallet_address: deliveryWallet,
           payment_method: 'stripe',
-          usd_amount: 4999,
+          product_id: selectedProduct,
+          usd_amount: product.usdAmount,
           user_id: user?.id,
         }),
       });
@@ -216,6 +221,7 @@ function JoinPresalePage() {
           wallet_address: walletAddress,
           delivery_wallet_address: deliveryWallet || walletAddress,
           payment_method: 'solana',
+          product_id: selectedProduct,
           usd_amount: price.presaleUsd,
           sol_amount: price.solAmount,
           sol_price_at_purchase: price.solPrice,
@@ -370,7 +376,7 @@ function JoinPresalePage() {
                 {[
                   { label: 'Total Supply', value: '1,000,000,000', sub: '$KB Tokens' },
                   { label: 'Your Allocation', value: '5,000,000', sub: '0.5% of Supply' },
-                  { label: 'Investment', value: '$4,999', sub: 'USD or SOL equivalent' },
+                  { label: 'Investment', value: `$${PRODUCTS.main.usdAmount.toLocaleString()}`, sub: 'USD or SOL equivalent' },
                   { label: 'Tax', value: '0%', sub: 'Zero Tax Forever' },
                 ].map((item, i) => (
                   <div key={i}>
@@ -435,10 +441,32 @@ function JoinPresalePage() {
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2">
             <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/[0.03] p-2 flex flex-col gap-4">
 
+              {/* Admin: test product switcher */}
+              {isAdmin(user?.id) && (
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  {getAvailableProducts(user?.id).map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedProduct(p.id as ProductId)}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${
+                        selectedProduct === p.id
+                          ? p.isTest ? 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300' : 'bg-white/10 border border-white/20 text-white'
+                          : 'bg-white/[0.03] border border-white/5 text-white/30 hover:text-white/60'
+                      }`}
+                    >
+                      {p.isTest ? `TEST $${p.usdAmount}` : `$${p.usdAmount.toLocaleString()}`}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Price header */}
               <div className="text-center">
-                <div className="text-4xl font-bold text-white tracking-tighter">$4,999</div>
-                <div className="text-white/60 text-sm mt-1">5,000,000 $KB Tokens</div>
+                <div className="text-4xl font-bold text-white tracking-tighter">
+                  ${product.usdAmount.toLocaleString()}
+                  {product.isTest && <span className="text-yellow-400 text-sm ml-2 font-mono">TEST</span>}
+                </div>
+                <div className="text-white/60 text-sm mt-1">{product.tokenAllocation.toLocaleString()} $KB Tokens</div>
                 <AnimatePresence mode="wait">
                   {method === 'solana' && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3">
