@@ -83,7 +83,7 @@ if (projectId) {
       headless: false,
     },
     allWallets: 'SHOW',
-    featuredWalletIds: FeaturedWalletIds,
+    featuredWalletIds: [...FeaturedWalletIds],
   });
 }
 
